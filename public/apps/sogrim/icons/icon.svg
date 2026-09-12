@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Sogrim poker table app icon</title>
+  <rect width="512" height="512" rx="112" fill="#16463a"/>
+  <ellipse cx="256" cy="256" rx="166" ry="126" fill="none" stroke="#fbf4e5" stroke-width="18"/>
+  <g fill="#f3c969" stroke="#16463a" stroke-width="12">
+    <circle cx="256" cy="112" r="29"/>
+    <circle cx="420" cy="256" r="29"/>
+    <circle cx="256" cy="400" r="29"/>
+    <circle cx="92" cy="256" r="29"/>
+  </g>
+  <g transform="rotate(-9 238 249)">
+    <rect x="198" y="190" width="80" height="118" rx="13" fill="#fbf4e5"/>
+    <path d="M238 218 258 245 238 272 218 245Z" fill="#b94332"/>
+  </g>
+  <g transform="rotate(10 290 258)">
+    <rect x="250" y="199" width="80" height="118" rx="13" fill="#fbf4e5"/>
+    <path d="M290 227c-27 21-25 41 0 58 25-17 27-37 0-58Z" fill="#202720"/>
+  </g>
+  <circle cx="340" cy="320" r="31" fill="#b94332" stroke="#fbf4e5" stroke-dasharray="13 9" stroke-width="10"/>
+</svg>

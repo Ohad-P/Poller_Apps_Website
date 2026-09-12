@@ -64,6 +64,7 @@ let currentResult = null;
 let settlementPending = false;
 let deferredInstallPrompt = null;
 let toastTimeout;
+let activePlayerId = state.players[0]?.id ?? null;
 
 renderPlayers();
 renderFriends();
@@ -133,6 +134,15 @@ elements.playerList.addEventListener('focusout', (event) => {
 });
 
 elements.playerList.addEventListener('click', (event) => {
+  const toggleButton = event.target.closest('.player-toggle');
+  if (toggleButton) {
+    const card = toggleButton.closest('.player-card');
+    activePlayerId = card.dataset.playerId;
+    updateExpandedPlayer();
+    requestAnimationFrame(() => card.querySelector('[data-field="name"]')?.focus());
+    return;
+  }
+
   const modeButton = event.target.closest('[data-buy-in-mode]');
   if (modeButton) {
     setBuyInMode(modeButton);
@@ -158,6 +168,9 @@ elements.playerList.addEventListener('click', (event) => {
 
   const card = removeButton.closest('.player-card');
   state.players = state.players.filter(({ id }) => id !== card.dataset.playerId);
+  if (activePlayerId === card.dataset.playerId) {
+    activePlayerId = state.players[0]?.id ?? null;
+  }
   invalidateResult();
   saveSession();
   renderPlayers();
@@ -285,6 +298,7 @@ function addPlayer() {
 
   const player = createEmptyPlayer();
   state.players.push(player);
+  activePlayerId = player.id;
   invalidateResult();
   saveSession();
   renderPlayers();
@@ -309,6 +323,7 @@ function addRememberedFriend(name) {
   }
 
   player.name = name;
+  activePlayerId = player.id;
   invalidateResult();
   saveSession();
   renderPlayers();
@@ -454,6 +469,10 @@ function applyReceivedAction(button) {
 function renderPlayers() {
   elements.playerList.replaceChildren();
 
+  if (!state.players.some(({ id }) => id === activePlayerId)) {
+    activePlayerId = state.players[0]?.id ?? null;
+  }
+
   for (const [index, player] of state.players.entries()) {
     const fragment = elements.playerTemplate.content.cloneNode(true);
     const card = fragment.querySelector('.player-card');
@@ -462,6 +481,8 @@ function renderPlayers() {
     const errorElement = fragment.querySelector('.player-error');
     card.dataset.playerId = player.id;
     fragment.querySelector('.player-number').textContent = String(index + 1).padStart(2, '0');
+    const toggleButton = fragment.querySelector('.player-toggle');
+    toggleButton.setAttribute('aria-label', `Edit player ${index + 1}`);
     fragment.querySelector('[data-field="name"]').value = player.name;
     fragment.querySelector('[data-field="cashBuyIn"]').value = player.cashBuyIn;
     fragment.querySelector('[data-field="creditBuyIn"]').value = player.creditBuyIn;
@@ -483,6 +504,8 @@ function renderPlayers() {
     updateReceivedActionButtons(card, player);
   }
 
+  updateExpandedPlayer();
+
   const atLimit = state.players.length >= MAX_PLAYERS;
   elements.playerCount.textContent = `${state.players.length} ${state.players.length === 1 ? 'player' : 'players'}`;
   elements.addPlayerButton.disabled = atLimit;
@@ -499,6 +522,10 @@ function updatePlayerCard(card, player) {
   const buyInOutput = card.querySelector('.buy-in-total');
   const cashOutput = card.querySelector('.cash-buy-in-total');
   const creditOutput = card.querySelector('.credit-buy-in-total');
+  const summaryName = card.querySelector('.player-summary-name');
+  const summaryBuyIn = card.querySelector('.player-summary-buy-in');
+  const summaryCashOut = card.querySelector('.player-summary-cash-out');
+  summaryName.textContent = player.name.trim() || `Player ${state.players.findIndex(({ id }) => id === player.id) + 1}`;
 
   if (cashBuyInCents === null || creditBuyInCents === null || cashOutCents === null
     || extraPaidCents === null || receivedCents === null) {
@@ -507,6 +534,8 @@ function updatePlayerCard(card, player) {
     buyInOutput.textContent = '—';
     cashOutput.textContent = '—';
     creditOutput.textContent = '—';
+    summaryBuyIn.textContent = '—';
+    summaryCashOut.textContent = '—';
     return;
   }
 
@@ -517,6 +546,16 @@ function updatePlayerCard(card, player) {
   buyInOutput.textContent = formatMoney(buyInCents);
   cashOutput.textContent = formatMoney(cashBuyInCents);
   creditOutput.textContent = formatMoney(creditBuyInCents);
+  summaryBuyIn.textContent = formatMoney(buyInCents);
+  summaryCashOut.textContent = formatMoney(cashOutCents);
+}
+
+function updateExpandedPlayer() {
+  for (const card of elements.playerList.querySelectorAll('.player-card')) {
+    const isActive = card.dataset.playerId === activePlayerId;
+    card.classList.toggle('is-active', isActive);
+    card.querySelector('.player-toggle').setAttribute('aria-expanded', String(isActive));
+  }
 }
 
 function updateBuyInModeButtons(card, player) {
@@ -938,7 +977,7 @@ function createShareText(result) {
   const payments = result.transactions.map(
     (transaction) => `${transaction.payerName} pays ${transaction.payeeName} ${formatMoney(transaction.amountCents)}`,
   );
-  return [heading, '', ...payments, '', 'Calculated with Table Close'].join('\n');
+  return [heading, '', ...payments, '', 'Calculated with Sogrim'].join('\n');
 }
 
 function formatMoney(cents) {
@@ -1296,6 +1335,7 @@ function saveSession() {
 
 function resetSession() {
   state = createInitialSession();
+  activePlayerId = state.players[0].id;
   currentResult = null;
   try {
     localStorage.removeItem(STORAGE_KEY);
@@ -1356,7 +1396,7 @@ function initializeInstallExperience() {
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     elements.installButton.hidden = true;
-    showToast('Table Close is installed.');
+    showToast('Sogrim is installed.');
   });
 
   elements.installButton.addEventListener('click', async () => {
@@ -1391,7 +1431,12 @@ async function registerServiceWorker() {
   }
 
   try {
-    await navigator.serviceWorker.register(new URL('./service-worker.js', document.baseURI));
+    const registration = await navigator.serviceWorker.register(new URL('./service-worker.js', document.baseURI));
+    const legacyScope = new URL('/apps/table-close/', window.location.origin).href;
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations
+      .filter((candidate) => candidate !== registration && candidate.scope === legacyScope)
+      .map((candidate) => candidate.unregister()));
   } catch {
     showToast('Offline mode could not be enabled.');
   }

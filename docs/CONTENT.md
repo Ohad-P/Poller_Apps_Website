@@ -5,7 +5,7 @@
 The first homepage contains four parts:
 
 1. A concise Poller Apps introduction.
-2. One featured, usable release: Table Close.
+2. One featured, usable release: Sogrim.
 3. Three principles explaining how projects are approached.
 4. A short statement that the portfolio will grow as work becomes ready.
 
@@ -23,11 +23,11 @@ Every future project entry should answer:
 
 Status labels must be honest. Use `Available now`, `Prototype`, `Case study`, or `Archived` rather than vague hype.
 
-## Updating Table Close
+## Updating Sogrim
 
-The homepage links to `/apps/table-close/`. Its preview is a deliberately simplified CSS illustration, not a screenshot. If the app's name, color system, or core workflow changes, update the preview and description together.
+The homepage links to `/apps/sogrim/`. Its preview is a deliberately simplified CSS illustration, not a screenshot. If the app's name, color system, or core workflow changes, update the preview and description together.
 
-Run `npm run sync:apps` after changing Table Close. This tests and rebuilds the app, then updates the versioned release that the Poller Apps build includes.
+Run `npm run sync:apps` after changing Sogrim. This tests and rebuilds the app, then updates the versioned release that the Poller Apps build includes.
 
 ## Domain References
 

@@ -26,8 +26,16 @@ const server = http.createServer(async (request, response) => {
     const requestUrl = new URL(request.url, `http://${request.headers.host}`);
     const pathname = decodeURIComponent(requestUrl.pathname);
 
-    if (pathname === '/apps/table-close' || pathname === '/table-close' || pathname === '/table-close/') {
-      response.writeHead(308, { Location: '/apps/table-close/' });
+    if (pathname === '/apps/sogrim') {
+      response.writeHead(308, { Location: '/apps/sogrim/' });
+      response.end();
+      return;
+    }
+
+    if (pathname === '/apps/table-close' || pathname.startsWith('/apps/table-close/')
+      || pathname === '/table-close' || pathname === '/table-close/'
+      || pathname === '/sogrim' || pathname === '/sogrim/') {
+      response.writeHead(308, { Location: '/apps/sogrim/' });
       response.end();
       return;
     }

@@ -1,5 +1,6 @@
-const CACHE_PREFIX = `table-close-${self.registration.scope}-`;
-const CACHE_NAME = `${CACHE_PREFIX}7b88b7692d96`;
+const CACHE_PREFIX = `sogrim-${self.registration.scope}-`;
+const LEGACY_CACHE_PREFIX = 'table-close-';
+const CACHE_NAME = `${CACHE_PREFIX}7b39b25c3dea`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -26,7 +27,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => Promise.all(
       cacheNames
-        .filter((cacheName) => cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME)
+        .filter((cacheName) => (
+          (cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME)
+          || cacheName.startsWith(LEGACY_CACHE_PREFIX)
+        ))
         .map((cacheName) => caches.delete(cacheName)),
     )).then(() => self.clients.claim()),
   );

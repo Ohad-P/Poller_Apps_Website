@@ -4,16 +4,18 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const tableCloseRoot = path.resolve(projectRoot, '..', 'Poker_Stattle_App');
-const tableCloseBuild = path.join(tableCloseRoot, 'dist');
-const versionedRelease = path.join(projectRoot, 'public', 'apps', 'table-close');
+const sogrimRoot = path.resolve(projectRoot, '..', 'Poker_Stattle_App');
+const sogrimBuild = path.join(sogrimRoot, 'dist');
+const versionedRelease = path.join(projectRoot, 'public', 'apps', 'sogrim');
+const legacyRelease = path.join(projectRoot, 'public', 'apps', 'table-close');
 const npmCommand = 'npm';
 
-await run(npmCommand, ['run', 'check'], tableCloseRoot);
+await run(npmCommand, ['run', 'check'], sogrimRoot);
 await rm(versionedRelease, { recursive: true, force: true });
-await cp(tableCloseBuild, versionedRelease, { recursive: true });
+await rm(legacyRelease, { recursive: true, force: true });
+await cp(sogrimBuild, versionedRelease, { recursive: true });
 
-console.log(`Updated versioned Table Close release in ${versionedRelease}`);
+console.log(`Updated versioned Sogrim release in ${versionedRelease}`);
 
 function run(command, argumentsList, cwd) {
   return new Promise((resolve, reject) => {

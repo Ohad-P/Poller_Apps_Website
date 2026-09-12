@@ -1,2 +1,7 @@
-/table-close  /apps/table-close/  301
-/table-close/ /apps/table-close/  301
+/apps/table-close  /apps/sogrim/  301
+/apps/table-close/ /apps/sogrim/  301
+/apps/table-close/* /apps/sogrim/:splat 301
+/table-close  /apps/sogrim/  301
+/table-close/ /apps/sogrim/  301
+/sogrim  /apps/sogrim/  301
+/sogrim/ /apps/sogrim/  301

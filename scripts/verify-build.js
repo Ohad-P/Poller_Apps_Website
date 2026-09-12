@@ -16,12 +16,12 @@ const expectedFiles = [
   'sitemap.xml',
   '_headers',
   '_redirects',
-  'apps/table-close/index.html',
-  'apps/table-close/manifest.webmanifest',
-  'apps/table-close/service-worker.js',
-  'apps/table-close/assets/app.js',
-  'apps/table-close/assets/settlement.js',
-  'apps/table-close/assets/styles.css',
+  'apps/sogrim/index.html',
+  'apps/sogrim/manifest.webmanifest',
+  'apps/sogrim/service-worker.js',
+  'apps/sogrim/assets/app.js',
+  'apps/sogrim/assets/settlement.js',
+  'apps/sogrim/assets/styles.css',
 ];
 
 for (const relativePath of expectedFiles) {
@@ -32,8 +32,8 @@ const homepage = await readFile(path.join(outputRoot, 'index.html'), 'utf8');
 if (homepage.includes('./src/')) {
   throw new Error('Production homepage still references source asset paths.');
 }
-if (!homepage.includes('./apps/table-close/')) {
-  throw new Error('Production homepage does not link to Table Close.');
+if (!homepage.includes('./apps/sogrim/')) {
+  throw new Error('Production homepage does not link to Sogrim.');
 }
 if (!homepage.includes('Poller Apps') || !homepage.includes('https://pollerapps.com/')) {
   throw new Error('Production homepage is missing the Poller Apps name or canonical domain.');
@@ -46,12 +46,25 @@ for (const relativePath of ['index.html', '404.html', 'robots.txt', 'sitemap.xml
   }
 }
 
-const tableCloseWorker = await readFile(
-  path.join(outputRoot, 'apps', 'table-close', 'service-worker.js'),
+const sogrimWorker = await readFile(
+  path.join(outputRoot, 'apps', 'sogrim', 'service-worker.js'),
   'utf8',
 );
-if (tableCloseWorker.includes('__BUILD_VERSION__')) {
-  throw new Error('Table Close service worker was copied before its production build completed.');
+if (sogrimWorker.includes('__BUILD_VERSION__')) {
+  throw new Error('Sogrim service worker was copied before its production build completed.');
 }
 
-console.log(`Verified ${expectedFiles.length} production files and Table Close integration.`);
+const sogrimManifest = JSON.parse(await readFile(
+  path.join(outputRoot, 'apps', 'sogrim', 'manifest.webmanifest'),
+  'utf8',
+));
+if (sogrimManifest.id !== '/apps/sogrim/' || !sogrimManifest.name.includes('Sogrim')) {
+  throw new Error('Sogrim install metadata has an incorrect identity.');
+}
+
+const redirects = await readFile(path.join(outputRoot, '_redirects'), 'utf8');
+if (!redirects.includes('/apps/table-close') || !redirects.includes('/apps/sogrim/')) {
+  throw new Error('Legacy Table Close URLs do not redirect to Sogrim.');
+}
+
+console.log(`Verified ${expectedFiles.length} production files and Sogrim integration.`);

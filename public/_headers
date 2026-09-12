@@ -8,5 +8,5 @@
 /assets/*
   Cache-Control: public, max-age=0, must-revalidate
 
-/apps/table-close/service-worker.js
+/apps/sogrim/service-worker.js
   Cache-Control: no-cache

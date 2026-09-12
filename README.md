@@ -1,6 +1,6 @@
 # Poller Apps Website
 
-The clean, responsive home of Poller Apps. The first release showcased and distributed through the site is the Table Close PWA.
+The clean, responsive home of Poller Apps. The first release showcased and distributed through the site is the Sogrim PWA.
 
 Production domain: `https://pollerapps.com/`.
 
@@ -10,10 +10,10 @@ Version `0.1` includes:
 
 - Responsive Poller Apps landing page.
 - Original CSS-based brand graphics with no stock imagery.
-- Featured Table Close project and working launch links.
+- Featured Sogrim project and working launch links.
 - Production metadata, sitemap, robots rules, redirects, and security headers.
 - A dependency-free local server and build process.
-- Automatic inclusion of the existing Table Close production build.
+- Automatic inclusion of the existing Sogrim production build.
 
 ## Project Locations
 
@@ -24,23 +24,23 @@ C:\Users\User\projects\Poller_Labs_Website
 C:\Users\User\projects\Poker_Stattle_App
 ```
 
-The Poller Apps production build copies Table Close into:
+The Poller Apps production build copies Sogrim into:
 
 ```text
-dist/apps/table-close/
+dist/apps/sogrim/
 ```
 
 The public URL will therefore be:
 
 ```text
-https://pollerapps.com/apps/table-close/
+https://pollerapps.com/apps/sogrim/
 ```
 
 ## Quick Start
 
 Prerequisite: Node.js 20 or newer.
 
-Sync the tested Table Close release once, then start the Poller Apps development server:
+Sync the tested Sogrim release once, then start the Poller Apps development server:
 
 ```powershell
 cd C:\Users\User\projects\Poller_Labs_Website
@@ -55,8 +55,8 @@ Open `http://localhost:5174`.
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Serve the source homepage and current Table Close production build. |
-| `npm run sync:apps` | Test/build Table Close and update its versioned release inside this project. |
+| `npm run dev` | Serve the source homepage and current Sogrim production build. |
+| `npm run sync:apps` | Test/build Sogrim and update its versioned release inside this project. |
 | `npm run build` | Create the deployable combined site in `dist/`. |
 | `npm test` | Verify required production files and integration links. |
 | `npm run check` | Check JavaScript syntax, build, and verify the combined site. |

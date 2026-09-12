@@ -20,9 +20,9 @@ Recommended sequence:
 
 ## Included Apps
 
-The tested Table Close release is versioned under `public/apps/table-close/`. Cloud builds therefore need only this website repository.
+The tested Sogrim release is versioned under `public/apps/sogrim/`. Cloud builds therefore need only this website repository.
 
-The editable Table Close source remains in its separate project. After changing it locally, update the website's release copy with:
+The editable Sogrim source remains in its separate project. After changing it locally, update the website's release copy with:
 
 ```powershell
 cd C:\Users\User\projects\Poller_Labs_Website
@@ -53,8 +53,9 @@ After deployment, check:
 
 - `https://pollerapps.com/` loads without redirects to HTTP.
 - `https://www.pollerapps.com/` redirects consistently.
-- `https://pollerapps.com/apps/table-close/` opens and can be installed.
-- Table Close works after an offline reload.
+- `https://pollerapps.com/apps/sogrim/` opens and can be installed.
+- Sogrim works after an offline reload.
+- Legacy `/apps/table-close/` and `/table-close/` URLs redirect permanently to Sogrim.
 - `https://pollerapps.com/robots.txt` and `/sitemap.xml` load.
 - Browser developer tools report no Content Security Policy errors.
 - Security headers are present in the production response.
