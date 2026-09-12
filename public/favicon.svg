@@ -1,8 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
   <title id="title">Poller Apps</title>
-  <rect width="64" height="64" fill="#151719"/>
-  <rect x="15" y="15" width="34" height="34" fill="none" stroke="#d5f36b" stroke-width="3" transform="rotate(45 32 32)"/>
-  <circle cx="25" cy="25" r="3.5" fill="#ff5c39"/>
-  <circle cx="32" cy="32" r="3.5" fill="#f3f0e8"/>
-  <circle cx="39" cy="39" r="3.5" fill="#3657db"/>
+  <defs>
+    <linearGradient id="metal" x1="18" y1="13" x2="43" y2="49" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffdf7"/>
+      <stop offset=".48" stop-color="#d7d1df"/>
+      <stop offset="1" stop-color="#8f79bb"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#151719"/>
+  <path d="M32 8c3 0 3 8 5 13 2 4 4 6 8 8 4 2 11 1 11 4s-7 3-11 5c-4 2-6 4-8 8-2 4-2 10-5 10s-3-6-5-10c-2-4-4-6-8-8-4-2-11-2-11-5s7-2 11-4c4-2 6-4 8-8 2-5 2-13 5-13Z" fill="url(#metal)"/>
+  <circle cx="32" cy="32" r="3" fill="#f3f0e8"/>
 </svg>

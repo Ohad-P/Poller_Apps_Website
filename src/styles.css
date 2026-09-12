@@ -103,35 +103,17 @@ footer {
 }
 
 .wordmark-symbol {
-  position: relative;
-  display: grid;
-  width: 2.35rem;
-  height: 2.35rem;
-  border: 1px solid currentColor;
-  place-items: center;
-  transform: rotate(45deg);
-  transition: color 180ms ease, transform 300ms ease;
+  display: block;
+  width: 2.7rem;
+  height: 2.7rem;
+  object-fit: contain;
+  transform: rotate(-10deg) scale(1.15);
+  transition: transform 500ms cubic-bezier(.2, .75, .2, 1), filter 500ms ease;
 }
 
 .wordmark:hover .wordmark-symbol {
-  color: var(--blue);
-  transform: rotate(135deg);
-}
-
-.wordmark-symbol i {
-  position: absolute;
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.wordmark-symbol i:first-child {
-  transform: translate(-0.5rem, -0.5rem);
-}
-
-.wordmark-symbol i:last-child {
-  transform: translate(0.5rem, 0.5rem);
+  filter: drop-shadow(0 6px 8px rgba(87, 67, 123, .2));
+  transform: rotate(8deg) scale(1.22);
 }
 
 .site-header nav {
@@ -313,115 +295,146 @@ footer {
   margin: 0 auto;
 }
 
-.brand-grid {
+.poller-emblem {
+  --pointer-x: 50%;
+  --pointer-y: 42%;
+  --shift-x: 0px;
+  --shift-y: 0px;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
   position: relative;
   aspect-ratio: 1;
-  overflow: hidden;
-  color: #fff;
-  border-radius: 50%;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px) 0 0 / 3rem 3rem,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.16) 1px, transparent 1px) 0 0 / 3rem 3rem,
-    var(--blue);
-  box-shadow: 0.7rem 0.7rem 0 var(--orange);
-  transition: box-shadow 260ms ease, transform 260ms ease;
+  isolation: isolate;
+  perspective: 900px;
+  touch-action: pan-y;
 }
 
-.brand-grid:hover {
-  box-shadow: 1rem 1rem 0 var(--orange);
-  transform: translate(-0.2rem, -0.2rem);
-}
-
-.coordinate,
-.brand-caption {
+.emblem-stage {
   position: absolute;
-  z-index: 4;
-  font-family: "Courier New", monospace;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  z-index: 3;
+  inset: 5%;
+  display: block;
+  transform: rotate(-10deg) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transform-style: preserve-3d;
+  transition: transform 500ms cubic-bezier(.2, .75, .2, 1);
 }
 
-.coordinate-top {
-  top: 18%;
-  left: 17%;
+.emblem-stage img {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: emblem-float 5.5s ease-in-out infinite;
+  filter: saturate(.92) contrast(1.04);
 }
 
-.coordinate-bottom {
-  right: 18%;
-  bottom: 18%;
+.poller-emblem:hover .emblem-stage {
+  transform: rotate(-4deg) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(1.035);
 }
 
-.brand-caption {
-  bottom: 18%;
-  left: 17%;
-  text-transform: uppercase;
+.poller-emblem.is-pressed .emblem-stage {
+  transform: rotate(2deg) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(.97);
+  transition-duration: 120ms;
 }
 
-.orbit {
+.emblem-halo {
   position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.48);
+  z-index: 0;
+  inset: 8%;
   border-radius: 50%;
+  background: radial-gradient(circle at var(--pointer-x) var(--pointer-y), rgba(255, 255, 255, .95), rgba(216, 206, 242, .42) 20%, rgba(216, 206, 242, 0) 67%);
+  filter: blur(9px);
+  opacity: .86;
+  transform: translate(var(--shift-x), var(--shift-y));
+  transition: transform 700ms cubic-bezier(.2, .75, .2, 1), background 180ms ease;
 }
 
-.orbit::after {
+.emblem-shadow {
   position: absolute;
-  top: -0.28rem;
-  left: 50%;
-  width: 0.56rem;
-  height: 0.56rem;
+  z-index: 1;
+  right: 16%;
+  bottom: 11%;
+  left: 16%;
+  height: 13%;
   border-radius: 50%;
-  background: var(--acid);
+  background: rgba(38, 32, 49, .2);
+  filter: blur(16px);
+  transform: translate(calc(0px - var(--shift-x)), calc(12px - var(--shift-y))) scale(.9);
+  transition: transform 650ms cubic-bezier(.2, .75, .2, 1);
+}
+
+.emblem-ring {
+  position: absolute;
+  z-index: 2;
+  inset: 13%;
+  border: 1px solid rgba(83, 69, 111, .16);
+  border-radius: 50%;
+  transform: translate(calc(0px - var(--shift-x)), calc(0px - var(--shift-y)));
+  transition: transform 800ms cubic-bezier(.2, .75, .2, 1);
+}
+
+.emblem-ring::before,
+.emblem-ring::after {
+  position: absolute;
+  border-radius: 50%;
   content: "";
 }
 
-.orbit-one {
-  inset: 22%;
-  animation: orbit-spin 15s linear infinite;
+.emblem-ring::before {
+  inset: 12%;
+  border: 1px solid rgba(83, 69, 111, .09);
 }
 
-.orbit-two {
-  inset: 34%;
-  animation: orbit-spin 10s linear infinite reverse;
+.emblem-ring::after {
+  top: 8%;
+  right: 13%;
+  width: .48rem;
+  height: .48rem;
+  background: #765ba8;
+  box-shadow: 0 0 0 .35rem rgba(118, 91, 168, .09);
 }
 
-.orbit-two::after {
-  background: var(--orange);
-}
-
-.specimen {
+.emblem-glint {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  display: grid;
-  width: 32%;
-  aspect-ratio: 1;
-  color: var(--ink);
-  background: var(--acid);
-  place-items: center;
-  transform: translate(-50%, -50%) rotate(12deg);
-  transition: transform 350ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.brand-grid:hover .specimen {
-  transform: translate(-50%, -50%) rotate(4deg) scale(1.04);
-}
-
-.specimen b {
-  font-family: Georgia, serif;
-  font-size: clamp(3rem, 7vw, 5rem);
-  font-weight: 400;
-  transform: rotate(-12deg);
-}
-
-.specimen i {
-  position: absolute;
-  right: -0.7rem;
-  bottom: -0.7rem;
-  width: 1.4rem;
-  height: 1.4rem;
+  inset: 13%;
   border-radius: 50%;
-  background: var(--orange);
+  background: radial-gradient(circle at var(--pointer-x) var(--pointer-y), rgba(255, 255, 255, .62), transparent 31%);
+  mix-blend-mode: screen;
+  opacity: .8;
+  pointer-events: none;
+  transform: translateZ(36px);
+}
+
+.emblem-spark {
+  position: absolute;
+  z-index: 4;
+  width: .48rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #6f5799;
+  box-shadow: 0 0 0 .3rem rgba(111, 87, 153, .08);
+  transform: translate(var(--shift-x), var(--shift-y));
+  transition: transform 850ms cubic-bezier(.2, .75, .2, 1);
+}
+
+.emblem-spark-one {
+  top: 19%;
+  right: 17%;
+}
+
+.emblem-spark-two {
+  bottom: 23%;
+  left: 12%;
+  width: .3rem;
+  background: #bba8df;
+  transform: translate(calc(0px - var(--shift-x)), calc(0px - var(--shift-y)));
+}
+
+.emblem-spark-three {
+  right: 8%;
+  bottom: 34%;
+  width: .22rem;
+  background: #151719;
+  box-shadow: none;
 }
 
 .work-section,
@@ -1011,9 +1024,13 @@ footer p {
   transition-delay: 180ms;
 }
 
-@keyframes orbit-spin {
-  to {
-    transform: rotate(1turn);
+@keyframes emblem-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-7px) scale(1.012);
   }
 }
 
@@ -1043,8 +1060,8 @@ footer p {
   }
 
   .brand-mark {
-    width: auto;
-    margin: 0;
+    width: min(36vw, 28rem);
+    margin: 0 -1rem 0 auto;
   }
 
   .section-label > span {
@@ -1112,6 +1129,16 @@ footer p {
 
   .js .reveal {
     opacity: 1;
+    transform: none;
+  }
+
+  .emblem-stage,
+  .poller-emblem:hover .emblem-stage,
+  .poller-emblem.is-pressed .emblem-stage,
+  .emblem-halo,
+  .emblem-shadow,
+  .emblem-ring,
+  .emblem-spark {
     transform: none;
   }
 }

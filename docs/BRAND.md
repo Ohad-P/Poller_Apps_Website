@@ -12,9 +12,9 @@ Small tools. Carefully made.
 
 ## Visual Direction
 
-The identity combines a strict editorial grid with bright moving parts. Layouts use hard lines, large type, geometric forms, and generous empty space.
+The identity combines a strict editorial grid with one sculptural, responsive mark. Layouts use hard lines, large type, precise forms, and generous empty space.
 
-The site intentionally avoids stock imagery, generic gradients, glass cards, and fake product counts. The graphics are built entirely with HTML and CSS.
+The site intentionally avoids stock imagery, decorative labels, generic glass cards, and fake product counts. The graphics are built from original SVG and CSS artwork.
 
 ## Colors
 
@@ -39,9 +39,9 @@ The brand uses system fonts so it loads immediately and remains private/offline-
 
 ## Mark
 
-The Poller Apps mark is a rotated square containing three points. It represents an idea moving through three states: question, experiment, release.
+The Poller Apps mark is a soft four-point north star. It represents a fixed creative direction with room to build apps, games, experiments, and tools around it. Its pearl-metal surface gives the editorial system one distinctive object rather than another flat initial or abstract diagram.
 
-Do not stretch, add effects, or place the mark on visually noisy imagery. Keep at least half the mark's width clear around it.
+The hero version reacts to pointer position through light, depth, and restrained magnetic movement. Small wordmark and favicon versions remain simple. Do not add text, coordinates, or a containing shape around the mark, and keep at least half its width clear around it.
 
 ## Voice
 

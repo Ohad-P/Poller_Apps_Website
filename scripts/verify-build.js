@@ -11,6 +11,7 @@ const expectedFiles = [
   'assets/site.js',
   'assets/styles.css',
   'favicon.svg',
+  'poller-symbol.svg',
   'social-card.png',
   'robots.txt',
   'sitemap.xml',
@@ -34,6 +35,12 @@ if (homepage.includes('./src/')) {
 }
 if (!homepage.includes('./apps/sogrim/')) {
   throw new Error('Production homepage does not link to Sogrim.');
+}
+if (!homepage.includes('./poller-symbol.svg')) {
+  throw new Error('Production homepage does not include the Poller emblem.');
+}
+if (/P \/ 01|A \/ 26|Ideas in motion/i.test(homepage)) {
+  throw new Error('Production homepage still contains the retired Poller composition.');
 }
 if (!homepage.includes('Poller Apps') || !homepage.includes('https://pollerapps.com/')) {
   throw new Error('Production homepage is missing the Poller Apps name or canonical domain.');
