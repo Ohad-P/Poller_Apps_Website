@@ -4,6 +4,66 @@ document.querySelector('#currentYear').textContent = new Date().getFullYear();
 const header = document.querySelector('.site-header');
 const revealElements = document.querySelectorAll('.reveal');
 const emblem = document.querySelector('.poller-emblem');
+const themeToggle = document.querySelector('#themeToggle');
+const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const themeStorageKey = 'poller-apps/theme';
+
+function readSavedTheme() {
+  try {
+    return localStorage.getItem(themeStorageKey);
+  } catch {
+    return null;
+  }
+}
+
+function applyTheme(theme, persist = false) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute(
+    'content',
+    theme === 'dark' ? '#111318' : '#f3f0e8',
+  );
+  if (persist) {
+    try {
+      localStorage.setItem(themeStorageKey, theme);
+    } catch {
+      // The active theme still works for the current page.
+    }
+  }
+  if (themeToggle) {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    const label = `Switch to ${nextTheme} mode`;
+    themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+    themeToggle.setAttribute('aria-label', label);
+    themeToggle.title = label;
+  }
+}
+
+applyTheme(document.documentElement.dataset.theme || (themeQuery.matches ? 'dark' : 'light'));
+themeToggle?.addEventListener('click', () => {
+  const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  const update = () => applyTheme(nextTheme, true);
+  if (document.startViewTransition
+    && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.startViewTransition(update);
+  } else {
+    update();
+  }
+});
+themeQuery.addEventListener('change', (event) => {
+  if (!['light', 'dark'].includes(readSavedTheme())) {
+    applyTheme(event.matches ? 'dark' : 'light');
+  }
+});
+
+window.addEventListener('storage', (event) => {
+  if (event.key !== themeStorageKey) {
+    return;
+  }
+  applyTheme(['light', 'dark'].includes(event.newValue)
+    ? event.newValue
+    : themeQuery.matches ? 'dark' : 'light');
+});
 
 function updateHeader() {
   header.classList.toggle('is-scrolled', window.scrollY > 24);

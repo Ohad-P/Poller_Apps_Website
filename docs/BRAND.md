@@ -29,6 +29,20 @@ The site intentionally avoids stock imagery, decorative labels, generic glass ca
 
 Maintain strong contrast. Acid is an accent surface, not body text on paper.
 
+Dark mode keeps the same identity with purpose-built values rather than an inversion:
+
+| Role | Value |
+| --- | --- |
+| Background | `#111318` |
+| Surface | `#1a1d24` |
+| Text | `#f3f0e8` |
+| Muted text | `#aeb3bd` |
+| Signature blue | `#91a2ff` |
+| Signal orange | `#ff765b` |
+| Project field | `#293d9f` |
+
+Use the visitor's system preference until they make an explicit choice. A manual light/dark selection is stored locally and takes precedence on future visits.
+
 ## Typography
 
 The brand uses system fonts so it loads immediately and remains private/offline-friendly:

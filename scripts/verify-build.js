@@ -12,6 +12,8 @@ const expectedFiles = [
   'assets/styles.css',
   'favicon.svg',
   'poller-symbol.svg',
+  'theme-init.js',
+  'theme-init.js',
   'social-card.png',
   'robots.txt',
   'sitemap.xml',
@@ -38,6 +40,12 @@ if (!homepage.includes('./apps/sogrim/')) {
 }
 if (!homepage.includes('./poller-symbol.svg')) {
   throw new Error('Production homepage does not include the Poller emblem.');
+}
+if (!homepage.includes('./theme-init.js') || !homepage.includes('id="themeToggle"')) {
+  throw new Error('Production homepage is missing theme initialization or controls.');
+}
+if (!homepage.includes('./theme-init.js') || !homepage.includes('id="themeToggle"')) {
+  throw new Error('Production homepage is missing theme initialization or controls.');
 }
 if (/P \/ 01|A \/ 26|Ideas in motion/i.test(homepage)) {
   throw new Error('Production homepage still contains the retired Poller composition.');
