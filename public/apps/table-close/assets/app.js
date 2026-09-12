@@ -4,6 +4,7 @@ import {
   parseMoneyToCents,
   settleSession,
   summarizeSession,
+  TABLE_CASH_ID,
 } from './settlement.js';
 
 const STORAGE_KEY = 'table-close/session/v1';
@@ -56,10 +57,11 @@ const elements = {
   toast: document.querySelector('#toast'),
 };
 
-let state = loadSession();
-let friends = loadFriends();
-let history = loadHistory();
+let state = loadSession(true);
+let friends = loadFriends(true);
+let history = loadHistory(true);
 let currentResult = null;
+let settlementPending = false;
 let deferredInstallPrompt = null;
 let toastTimeout;
 
@@ -88,22 +90,26 @@ elements.playerList.addEventListener('input', (event) => {
   }
 
   player[input.dataset.field] = input.value;
+  if (input.dataset.field === 'received') {
+    player.receivedMode = 'custom';
+  } else if (input.dataset.field === 'cashOut' && player.receivedMode === 'full') {
+    player.received = input.value;
+    card.querySelector('[data-field="received"]').value = input.value;
+  }
   if (input.dataset.field === 'name') {
     card.querySelector('.buy-in-presets').setAttribute(
       'aria-label',
       `Quick add to buy-in for ${input.value.trim() || `player ${card.querySelector('.player-number').textContent}`}`,
     );
   }
-  currentResult = null;
-  elements.resultsSection.hidden = true;
+  invalidateResult();
   saveSession();
   updatePlayerCard(card, player);
-  updateRememberButton(card, player);
   updateSessionSummary();
 });
 
 elements.playerList.addEventListener('focusout', (event) => {
-  const input = event.target.closest('[data-field="buyIn"], [data-field="cashOut"], [data-field="paid"], [data-field="received"]');
+  const input = event.target.closest('[data-field="cashBuyIn"], [data-field="creditBuyIn"], [data-field="cashOut"], [data-field="extraPaid"], [data-field="received"]');
   const card = event.target.closest('.player-card');
   if (!input || !card || input.value.trim() === '') {
     return;
@@ -117,6 +123,10 @@ elements.playerList.addEventListener('focusout', (event) => {
   input.value = formatInputMoney(cents);
   const player = state.players.find(({ id }) => id === card.dataset.playerId);
   player[input.dataset.field] = input.value;
+  if (input.dataset.field === 'cashOut' && player.receivedMode === 'full') {
+    player.received = input.value;
+    card.querySelector('[data-field="received"]').value = input.value;
+  }
   saveSession();
   updatePlayerCard(card, player);
   updateSessionSummary();
@@ -141,12 +151,6 @@ elements.playerList.addEventListener('click', (event) => {
     return;
   }
 
-  const rememberButton = event.target.closest('.remember-player');
-  if (rememberButton) {
-    toggleRememberedPlayer(rememberButton);
-    return;
-  }
-
   const removeButton = event.target.closest('.remove-player');
   if (!removeButton) {
     return;
@@ -154,8 +158,7 @@ elements.playerList.addEventListener('click', (event) => {
 
   const card = removeButton.closest('.player-card');
   state.players = state.players.filter(({ id }) => id !== card.dataset.playerId);
-  currentResult = null;
-  elements.resultsSection.hidden = true;
+  invalidateResult();
   saveSession();
   renderPlayers();
   updateSessionSummary();
@@ -197,6 +200,9 @@ elements.historyList.addEventListener('click', async (event) => {
 
 elements.form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (settlementPending) {
+    return;
+  }
   const validation = validatePlayers();
   applyValidation(validation);
 
@@ -205,11 +211,29 @@ elements.form.addEventListener('submit', async (event) => {
     return;
   }
 
-  currentResult = settleSession(validation.normalizedPlayers);
-  await saveHistoryEntry(currentResult, validation.normalizedPlayers);
-  renderResults(currentResult);
-  elements.resultsSection.hidden = false;
-  elements.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const result = settleSession(validation.normalizedPlayers);
+  const sessionId = state.sessionId;
+  const revision = state.revision;
+  settlementPending = true;
+  updateSessionSummary();
+  try {
+    await rememberCompletedPlayers(validation.normalizedPlayers, sessionId, revision);
+    if (!isCurrentDraft(sessionId, revision)) {
+      return;
+    }
+    await saveHistoryEntry(result, validation.normalizedPlayers, sessionId, revision);
+    if (!isCurrentDraft(sessionId, revision)) {
+      return;
+    }
+    currentResult = result;
+    renderResults(result);
+    elements.resultsSection.hidden = false;
+    elements.resultsSection.focus({ preventScroll: true });
+    elements.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } finally {
+    settlementPending = false;
+    updateSessionSummary();
+  }
 });
 
 elements.copyButton.addEventListener('click', async () => {
@@ -261,50 +285,11 @@ function addPlayer() {
 
   const player = createEmptyPlayer();
   state.players.push(player);
+  invalidateResult();
   saveSession();
   renderPlayers();
   updateSessionSummary();
-  document.querySelector(`[data-player-id="${player.id}"] [data-field="name"]`)?.focus();
-}
-
-async function toggleRememberedPlayer(button) {
-  const card = button.closest('.player-card');
-  const player = state.players.find(({ id }) => id === card?.dataset.playerId);
-  const name = player?.name.trim();
-  if (!card || !player || !name) {
-    showToast('Enter a player name before remembering them.');
-    return;
-  }
-
-  let remembered;
-  await withStorageLock(FRIENDS_KEY, () => {
-    friends = loadFriends();
-    const existingIndex = friends.findIndex(
-      (friend) => friend.name.toLowerCase() === name.toLowerCase(),
-    );
-    if (existingIndex >= 0) {
-      friends.splice(existingIndex, 1);
-      remembered = false;
-    } else {
-      if (friends.length >= MAX_FRIENDS) {
-        return;
-      }
-      friends.push({ id: createId(), name });
-      friends.sort((left, right) => left.name.localeCompare(right.name));
-      remembered = true;
-    }
-    saveFriends();
-  });
-
-  if (remembered === undefined) {
-    showToast(`You can remember up to ${MAX_FRIENDS} friends.`);
-    return;
-  }
-  showToast(remembered
-    ? `${name} remembered on this device.`
-    : `${name} removed from remembered friends.`);
-  renderFriends();
-  updateAllRememberButtons();
+  findPlayerCard(player.id)?.querySelector('[data-field="name"]')?.focus();
 }
 
 function addRememberedFriend(name) {
@@ -324,19 +309,44 @@ function addRememberedFriend(name) {
   }
 
   player.name = name;
+  invalidateResult();
   saveSession();
   renderPlayers();
   updateSessionSummary();
-  document.querySelector(`[data-player-id="${player.id}"] [data-field="buyIn"]`)?.focus();
+  findPlayerCard(player.id)?.querySelector('[data-buy-in-preset]')?.focus();
 }
 
 async function removeFriend(friendId) {
   await withStorageLock(FRIENDS_KEY, () => {
-    friends = loadFriends().filter(({ id }) => id !== friendId);
-    saveFriends();
+    const nextFriends = loadFriends().filter(({ id }) => id !== friendId);
+    if (saveFriends(nextFriends)) {
+      friends = nextFriends;
+    }
   });
   renderFriends();
-  updateAllRememberButtons();
+}
+
+async function rememberCompletedPlayers(players, sessionId, revision) {
+  await withStorageLock(FRIENDS_KEY, () => {
+    if (!isCurrentDraft(sessionId, revision)) {
+      return;
+    }
+    const latestFriends = loadFriends();
+    const knownNames = new Set(latestFriends.map(({ name }) => name.toLowerCase()));
+    const nextFriends = [...latestFriends];
+    for (const player of players) {
+      const name = normalizeName(player.name);
+      if (!knownNames.has(name.toLowerCase()) && nextFriends.length < MAX_FRIENDS) {
+        nextFriends.push({ id: createId(), name });
+        knownNames.add(name.toLowerCase());
+      }
+    }
+    nextFriends.sort((left, right) => left.name.localeCompare(right.name));
+    if (saveFriends(nextFriends)) {
+      friends = nextFriends;
+    }
+  });
+  renderFriends();
 }
 
 function renderFriends() {
@@ -365,30 +375,14 @@ function renderFriends() {
   }
 }
 
-function updateRememberButton(card, player) {
-  const button = card.querySelector('.remember-player');
-  const name = player.name.trim();
-  const remembered = Boolean(name) && friends.some(
-    (friend) => friend.name.toLowerCase() === name.toLowerCase(),
-  );
-  button.disabled = !name;
-  button.classList.toggle('is-remembered', remembered);
-  button.setAttribute('aria-pressed', String(remembered));
-  button.textContent = remembered ? 'Saved' : 'Remember';
-  button.setAttribute('aria-label', `${remembered ? 'Forget' : 'Remember'} ${name || 'this player'}`);
-}
-
-function updateAllRememberButtons() {
-  for (const card of elements.playerList.querySelectorAll('.player-card')) {
-    const player = state.players.find(({ id }) => id === card.dataset.playerId);
-    if (player) {
-      updateRememberButton(card, player);
-    }
-  }
-}
-
 function isPlayerEmpty(player) {
-  return !player.name && !player.buyIn && !player.cashOut && !player.paid && !player.received;
+  return !player.name && !player.cashBuyIn && !player.creditBuyIn
+    && !player.cashOut && !player.extraPaid && !player.received;
+}
+
+function findPlayerCard(playerId) {
+  return [...elements.playerList.querySelectorAll('.player-card')]
+    .find((card) => card.dataset.playerId === playerId);
 }
 
 function applyBuyInPreset(button) {
@@ -399,23 +393,16 @@ function applyBuyInPreset(button) {
   }
 
   const incrementCents = Number(button.dataset.buyInPreset);
-  const totalCents = addMoneyPreset(player.buyIn, incrementCents);
-  const totalPaidCents = player.buyInMode === 'cash'
-    ? addMoneyPreset(player.paid, incrementCents)
-    : parseMoneyToCents(player.paid, { blankIsZero: true });
-  if (totalCents === null || totalPaidCents === null) {
-    showToast('Correct the current buy-in before using a quick-add button.');
+  const field = player.nextBuyInType === 'credit' ? 'creditBuyIn' : 'cashBuyIn';
+  const totalCents = addMoneyPreset(player[field], incrementCents);
+  if (totalCents === null) {
+    showToast('Correct the buy-in totals under More options before adding another buy-in.');
     return;
   }
 
-  player.buyIn = formatInputMoney(totalCents);
-  if (player.buyInMode === 'cash') {
-    player.paid = formatInputMoney(totalPaidCents);
-  }
-  card.querySelector('[data-field="buyIn"]').value = player.buyIn;
-  card.querySelector('[data-field="paid"]').value = player.paid;
-  currentResult = null;
-  elements.resultsSection.hidden = true;
+  player[field] = formatInputMoney(totalCents);
+  card.querySelector(`[data-field="${field}"]`).value = player[field];
+  invalidateResult();
   saveSession();
   updatePlayerCard(card, player);
   updateSessionSummary();
@@ -434,7 +421,7 @@ function setBuyInMode(button) {
     return;
   }
 
-  player.buyInMode = button.dataset.buyInMode;
+  player.nextBuyInType = button.dataset.buyInMode;
   saveSession();
   updateBuyInModeButtons(card, player);
 }
@@ -455,11 +442,12 @@ function applyReceivedAction(button) {
   }
 
   player.received = formatInputMoney(receivedCents);
+  player.receivedMode = button.dataset.receivedAction === 'all' ? 'full' : 'none';
   card.querySelector('[data-field="received"]').value = player.received;
-  currentResult = null;
-  elements.resultsSection.hidden = true;
+  invalidateResult();
   saveSession();
   updatePlayerCard(card, player);
+  updateReceivedActionButtons(card, player);
   updateSessionSummary();
 }
 
@@ -470,17 +458,21 @@ function renderPlayers() {
     const fragment = elements.playerTemplate.content.cloneNode(true);
     const card = fragment.querySelector('.player-card');
     const removeButton = fragment.querySelector('.remove-player');
-    const rememberButton = fragment.querySelector('.remember-player');
     const presetGroup = fragment.querySelector('.buy-in-presets');
+    const errorElement = fragment.querySelector('.player-error');
     card.dataset.playerId = player.id;
     fragment.querySelector('.player-number').textContent = String(index + 1).padStart(2, '0');
     fragment.querySelector('[data-field="name"]').value = player.name;
-    fragment.querySelector('[data-field="buyIn"]').value = player.buyIn;
+    fragment.querySelector('[data-field="cashBuyIn"]').value = player.cashBuyIn;
+    fragment.querySelector('[data-field="creditBuyIn"]').value = player.creditBuyIn;
     fragment.querySelector('[data-field="cashOut"]').value = player.cashOut;
-    fragment.querySelector('[data-field="paid"]').value = player.paid;
+    fragment.querySelector('[data-field="extraPaid"]').value = player.extraPaid;
     fragment.querySelector('[data-field="received"]').value = player.received;
     removeButton.setAttribute('aria-label', `Remove player ${index + 1}`);
-    rememberButton.setAttribute('aria-label', `Remember player ${index + 1}`);
+    errorElement.id = `player-error-${index + 1}`;
+    for (const input of fragment.querySelectorAll('[data-field]')) {
+      input.setAttribute('aria-describedby', errorElement.id);
+    }
     presetGroup.setAttribute(
       'aria-label',
       `Quick add to buy-in for ${player.name.trim() || `player ${index + 1}`}`,
@@ -488,7 +480,7 @@ function renderPlayers() {
     elements.playerList.append(fragment);
     updatePlayerCard(card, player);
     updateBuyInModeButtons(card, player);
-    updateRememberButton(card, player);
+    updateReceivedActionButtons(card, player);
   }
 
   const atLimit = state.players.length >= MAX_PLAYERS;
@@ -498,35 +490,60 @@ function renderPlayers() {
 }
 
 function updatePlayerCard(card, player) {
-  const buyInCents = parseMoneyToCents(player.buyIn);
+  const cashBuyInCents = parseMoneyToCents(player.cashBuyIn, { blankIsZero: true });
+  const creditBuyInCents = parseMoneyToCents(player.creditBuyIn, { blankIsZero: true });
   const cashOutCents = parseMoneyToCents(player.cashOut, { blankIsZero: true });
-  const paidCents = parseMoneyToCents(player.paid, { blankIsZero: true });
+  const extraPaidCents = parseMoneyToCents(player.extraPaid, { blankIsZero: true });
   const receivedCents = parseMoneyToCents(player.received, { blankIsZero: true });
   const output = card.querySelector('.player-net');
-  const creditOutput = card.querySelector('.credit-amount');
-  const contributionOutput = card.querySelector('.table-contribution');
+  const buyInOutput = card.querySelector('.buy-in-total');
+  const cashOutput = card.querySelector('.cash-buy-in-total');
+  const creditOutput = card.querySelector('.credit-buy-in-total');
 
-  if (buyInCents === null || cashOutCents === null || paidCents === null || receivedCents === null) {
+  if (cashBuyInCents === null || creditBuyInCents === null || cashOutCents === null
+    || extraPaidCents === null || receivedCents === null) {
     output.textContent = '—';
     output.className = 'player-net';
+    buyInOutput.textContent = '—';
+    cashOutput.textContent = '—';
     creditOutput.textContent = '—';
-    contributionOutput.textContent = '—';
     return;
   }
 
-  const netCents = cashOutCents - receivedCents - buyInCents + paidCents;
+  const buyInCents = cashBuyInCents + creditBuyInCents;
+  const netCents = cashOutCents - receivedCents - creditBuyInCents + extraPaidCents;
   output.textContent = formatSignedMoney(netCents);
   output.className = `player-net ${netCents > 0 ? 'is-positive' : netCents < 0 ? 'is-negative' : ''}`;
-  creditOutput.textContent = formatMoney(Math.max(buyInCents - paidCents, 0));
-  contributionOutput.textContent = formatSignedMoney(paidCents - receivedCents, false);
+  buyInOutput.textContent = formatMoney(buyInCents);
+  cashOutput.textContent = formatMoney(cashBuyInCents);
+  creditOutput.textContent = formatMoney(creditBuyInCents);
 }
 
 function updateBuyInModeButtons(card, player) {
   for (const button of card.querySelectorAll('[data-buy-in-mode]')) {
-    const selected = button.dataset.buyInMode === player.buyInMode;
+    const selected = button.dataset.buyInMode === player.nextBuyInType;
     button.classList.toggle('is-selected', selected);
     button.setAttribute('aria-pressed', String(selected));
   }
+}
+
+function updateReceivedActionButtons(card, player) {
+  for (const button of card.querySelectorAll('[data-received-action]')) {
+    const mode = button.dataset.receivedAction === 'all' ? 'full' : 'none';
+    const selected = mode === player.receivedMode;
+    button.classList.toggle('is-selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
+}
+
+function invalidateResult() {
+  state.revision = (state.revision ?? 0) + 1;
+  currentResult = null;
+  elements.resultsSection.hidden = true;
+}
+
+function isCurrentDraft(sessionId, revision) {
+  return state.sessionId === sessionId && state.revision === revision;
 }
 
 function updateSessionSummary() {
@@ -546,7 +563,7 @@ function updateSessionSummary() {
   elements.differenceTotal.className = differenceCents === 0 ? '' : 'has-difference';
   elements.tableCashTotal.textContent = formatSignedMoney(tableCashCents, false);
   elements.tableCashTotal.className = tableCashCents < 0 ? 'has-difference' : '';
-  elements.settleButton.disabled = !validation.ready;
+  elements.settleButton.disabled = settlementPending || !validation.ready;
   applyValidation(validation);
 
   if (validation.errors.size > 0) {
@@ -609,34 +626,47 @@ function validatePlayers() {
   let totalReceivedCents = 0;
 
   for (const player of state.players) {
-    const name = player.name.trim();
-    const buyInValue = player.buyIn.trim();
+    const name = normalizeName(player.name);
+    const cashBuyInValue = player.cashBuyIn.trim();
+    const creditBuyInValue = player.creditBuyIn.trim();
     const cashOutValue = player.cashOut.trim();
-    const paidValue = player.paid.trim();
+    const extraPaidValue = player.extraPaid.trim();
     const receivedValue = player.received.trim();
-    const isEmpty = !name && !buyInValue && !cashOutValue && !paidValue && !receivedValue;
+    const isEmpty = !name && !cashBuyInValue && !creditBuyInValue
+      && !cashOutValue && !extraPaidValue && !receivedValue;
 
     if (isEmpty) {
       continue;
     }
 
     const playerErrors = [];
-    const buyInCents = parseMoneyToCents(buyInValue);
+    const cashBuyInCents = parseMoneyToCents(cashBuyInValue, { blankIsZero: true });
+    const creditBuyInCents = parseMoneyToCents(creditBuyInValue, { blankIsZero: true });
     const cashOutCents = parseMoneyToCents(cashOutValue, { blankIsZero: true });
-    const paidCents = parseMoneyToCents(paidValue, { blankIsZero: true });
+    const extraPaidCents = parseMoneyToCents(extraPaidValue, { blankIsZero: true });
     const receivedCents = parseMoneyToCents(receivedValue, { blankIsZero: true });
+    const buyInCents = cashBuyInCents === null || creditBuyInCents === null
+      ? null
+      : cashBuyInCents + creditBuyInCents;
+    const paidCents = cashBuyInCents === null || extraPaidCents === null
+      ? null
+      : cashBuyInCents + extraPaidCents;
 
     if (!name) {
       playerErrors.push('Add a player name.');
     }
     if (buyInCents === null || buyInCents === 0) {
-      playerErrors.push('Buy-in must be greater than zero with no more than 2 decimals.');
+      playerErrors.push('Add at least one valid cash or credit buy-in.');
+    } else if (buyInCents > MAX_AMOUNT_CENTS) {
+      playerErrors.push('Total buy-in is above the supported limit.');
     }
     if (cashOutCents === null) {
       playerErrors.push('Cash-out must be zero or more with no more than 2 decimals.');
     }
-    if (paidCents === null) {
-      playerErrors.push('Paid-to-table must be zero or more with no more than 2 decimals.');
+    if (extraPaidCents === null) {
+      playerErrors.push('Extra cash paid must be zero or more with no more than 2 decimals.');
+    } else if (paidCents > MAX_AMOUNT_CENTS) {
+      playerErrors.push('Cash paid is above the supported limit.');
     }
     if (receivedCents === null) {
       playerErrors.push('Received-from-table must be zero or more with no more than 2 decimals.');
@@ -708,6 +738,9 @@ function applyValidation(validation) {
     card.classList.toggle('is-invalid', messages.length > 0);
     errorElement.hidden = messages.length === 0;
     errorElement.textContent = messages.join(' ');
+    for (const input of card.querySelectorAll('[data-field]')) {
+      input.setAttribute('aria-invalid', String(messages.length > 0));
+    }
   }
 }
 
@@ -760,9 +793,9 @@ function renderResults(result) {
   }
 }
 
-async function saveHistoryEntry(result, players) {
+async function saveHistoryEntry(result, players, sessionId, revision) {
   const entry = {
-    id: state.sessionId,
+    id: sessionId,
     closedAt: new Date().toISOString(),
     players: players.map((player) => ({ ...player })),
     balances: result.balances.map((balance) => ({ ...balance })),
@@ -776,9 +809,14 @@ async function saveHistoryEntry(result, players) {
   };
 
   await withStorageLock(HISTORY_KEY, () => {
+    if (!isCurrentDraft(sessionId, revision)) {
+      return;
+    }
     const latestHistory = loadHistory();
-    history = [entry, ...latestHistory.filter(({ id }) => id !== entry.id)].slice(0, MAX_HISTORY);
-    saveHistory();
+    const nextHistory = [entry, ...latestHistory.filter(({ id }) => id !== entry.id)].slice(0, MAX_HISTORY);
+    if (saveHistory(nextHistory)) {
+      history = nextHistory;
+    }
   });
   renderHistory();
 }
@@ -834,7 +872,7 @@ function renderHistory() {
     const actions = document.createElement('div');
     actions.className = 'history-actions';
     actions.append(
-      createHistoryButton(entry.id, 'reuse', 'Use as new game'),
+      createHistoryButton(entry.id, 'reuse', 'Start with these players'),
       createHistoryButton(entry.id, 'copy', 'Copy plan'),
       createHistoryButton(entry.id, 'delete', 'Delete'),
     );
@@ -856,15 +894,7 @@ function createHistoryButton(historyId, action, label) {
 function reuseHistoryEntry(entry) {
   state = {
     sessionId: createId(),
-    players: entry.players.map((player) => ({
-      id: createId(),
-      name: player.name,
-      buyIn: formatInputMoney(player.buyInCents),
-      cashOut: formatInputMoney(player.cashOutCents),
-      paid: formatInputMoney(player.paidCents),
-      received: formatInputMoney(player.receivedCents),
-      buyInMode: 'credit',
-    })),
+    players: entry.players.map((player) => createEmptyPlayer(player.name)),
   };
   currentResult = null;
   elements.resultsSection.hidden = true;
@@ -872,7 +902,7 @@ function reuseHistoryEntry(entry) {
   renderPlayers();
   updateSessionSummary();
   document.querySelector('#main-content').scrollIntoView({ behavior: 'smooth' });
-  showToast('Saved players and amounts loaded as a new game.');
+  showToast('Players added to a fresh game.');
 }
 
 async function deleteHistoryEntry(historyId) {
@@ -880,8 +910,10 @@ async function deleteHistoryEntry(historyId) {
     return;
   }
   await withStorageLock(HISTORY_KEY, () => {
-    history = loadHistory().filter(({ id }) => id !== historyId);
-    saveHistory();
+    const nextHistory = loadHistory().filter(({ id }) => id !== historyId);
+    if (saveHistory(nextHistory)) {
+      history = nextHistory;
+    }
   });
   renderHistory();
 }
@@ -925,21 +957,24 @@ function formatInputMoney(cents) {
   return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`;
 }
 
-function createEmptyPlayer() {
+function createEmptyPlayer(name = '') {
   return {
     id: createId(),
-    name: '',
-    buyIn: '',
+    name,
+    cashBuyIn: '',
+    creditBuyIn: '',
     cashOut: '',
-    paid: '',
+    extraPaid: '',
     received: '',
-    buyInMode: 'credit',
+    receivedMode: 'none',
+    nextBuyInType: 'cash',
   };
 }
 
 function createInitialSession() {
   return {
     sessionId: createId(),
+    revision: 0,
     players: [createEmptyPlayer(), createEmptyPlayer()],
   };
 }
@@ -948,53 +983,123 @@ function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `item-${Date.now()}-${Math.random()}`;
 }
 
-function loadSession() {
+function normalizeId(value, usedIds) {
+  let id = String(value ?? '');
+  if (!/^[a-zA-Z0-9._:-]{1,128}$/.test(id) || id === TABLE_CASH_ID || usedIds.has(id)) {
+    do {
+      id = createId();
+    } while (usedIds.has(id));
+  }
+  usedIds.add(id);
+  return id;
+}
+
+function normalizeName(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function migratePlayer(player, id) {
+  const name = normalizeName(player?.name).slice(0, 40);
+  const cashOut = String(player?.cashOut ?? '');
+  const received = String(player?.received ?? '');
+  const cashOutCents = parseMoneyToCents(cashOut);
+  const receivedCents = parseMoneyToCents(received);
+  const explicitReceivedMode = ['none', 'full', 'custom'].includes(player?.receivedMode)
+    ? player.receivedMode
+    : null;
+  const receivedMode = explicitReceivedMode
+    ?? (received && cashOutCents !== null && receivedCents !== null && receivedCents === cashOutCents
+      ? 'full'
+      : !received ? 'none' : 'custom');
+  const normalizedReceived = receivedMode === 'full' ? cashOut : received;
+
+  if (player && typeof player === 'object'
+    && ('cashBuyIn' in player || 'creditBuyIn' in player)) {
+    return {
+      id,
+      name,
+      cashBuyIn: String(player.cashBuyIn ?? ''),
+      creditBuyIn: String(player.creditBuyIn ?? ''),
+      cashOut,
+      extraPaid: String(player.extraPaid ?? ''),
+      received: normalizedReceived,
+      receivedMode,
+      nextBuyInType: player.nextBuyInType === 'credit' ? 'credit' : 'cash',
+    };
+  }
+
+  const oldBuyInCents = parseMoneyToCents(player?.buyIn, { blankIsZero: true });
+  const oldPaidCents = parseMoneyToCents(player?.paid, { blankIsZero: true });
+  if (oldBuyInCents === null || oldPaidCents === null) {
+    return {
+      ...createEmptyPlayer(name),
+      id,
+      creditBuyIn: String(player?.buyIn ?? ''),
+      extraPaid: String(player?.paid ?? ''),
+      cashOut,
+      received: normalizedReceived,
+      receivedMode,
+    };
+  }
+
+  const cashBuyInCents = Math.min(oldBuyInCents, oldPaidCents);
+  return {
+    id,
+    name,
+    cashBuyIn: cashBuyInCents ? formatInputMoney(cashBuyInCents) : '',
+    creditBuyIn: oldBuyInCents > cashBuyInCents
+      ? formatInputMoney(oldBuyInCents - cashBuyInCents)
+      : '',
+    cashOut,
+    extraPaid: oldPaidCents > cashBuyInCents
+      ? formatInputMoney(oldPaidCents - cashBuyInCents)
+      : '',
+    received: normalizedReceived,
+    receivedMode,
+    nextBuyInType: player?.buyInMode === 'credit' ? 'credit' : 'cash',
+  };
+}
+
+function loadSession(persistRepair = false) {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const saved = JSON.parse(raw);
     if (!Array.isArray(saved?.players) || saved.players.length > MAX_PLAYERS) {
       return createInitialSession();
     }
 
     const usedIds = new Set();
     const players = saved.players.map((player) => {
-      let id = String(player.id || createEmptyPlayer().id);
-      if (usedIds.has(id)) {
-        id = createEmptyPlayer().id;
-      }
-      usedIds.add(id);
+      const id = normalizeId(player?.id, usedIds);
 
-      return {
-        id,
-        name: String(player.name ?? '').slice(0, 40),
-        buyIn: String(player.buyIn ?? ''),
-        cashOut: String(player.cashOut ?? ''),
-        paid: String(player.paid ?? ''),
-        received: String(player.received ?? ''),
-        buyInMode: player.buyInMode === 'cash' ? 'cash' : 'credit',
-      };
+      return migratePlayer(player, id);
     });
-    return {
+    const session = {
       sessionId: String(saved.sessionId || createId()),
+      revision: Number.isSafeInteger(saved.revision) && saved.revision >= 0 ? saved.revision : 0,
       players: players.length > 0 ? players : createInitialSession().players,
     };
+    persistRepairIfNeeded(STORAGE_KEY, raw, session, persistRepair);
+    return session;
   } catch {
     return createInitialSession();
   }
 }
 
-function loadFriends() {
+function loadFriends(persistRepair = false) {
   try {
-    const saved = JSON.parse(localStorage.getItem(FRIENDS_KEY));
+    const raw = localStorage.getItem(FRIENDS_KEY);
+    const saved = JSON.parse(raw);
     if (!Array.isArray(saved)) {
       return [];
     }
 
     const ids = new Set();
     const names = new Set();
-    return saved
-      .map((friend) => ({
-        id: String(friend.id || createId()),
-        name: String(friend.name ?? '').trim().slice(0, 40),
+    const normalized = saved
+      .map((friend, index) => ({
+        id: String(friend?.id || `legacy-friend-${index + 1}`),
+        name: normalizeName(friend?.name).slice(0, 40),
       }))
       .filter((friend) => {
         const key = friend.name.toLowerCase();
@@ -1002,44 +1107,51 @@ function loadFriends() {
           return false;
         }
         if (ids.has(friend.id)) {
-          friend.id = createId();
+          friend.id = `${friend.id}-${ids.size + 1}`;
         }
         ids.add(friend.id);
         names.add(key);
         return true;
       })
       .slice(0, MAX_FRIENDS);
+    persistRepairIfNeeded(FRIENDS_KEY, raw, normalized, persistRepair);
+    return normalized;
   } catch {
     return [];
   }
 }
 
-function saveFriends() {
+function saveFriends(value = friends) {
   try {
-    localStorage.setItem(FRIENDS_KEY, JSON.stringify(friends));
+    localStorage.setItem(FRIENDS_KEY, JSON.stringify(value));
+    return true;
   } catch {
     showToast('This browser could not save remembered friends.');
+    return false;
   }
 }
 
-function loadHistory() {
+function loadHistory(persistRepair = false) {
   try {
-    const saved = JSON.parse(localStorage.getItem(HISTORY_KEY));
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const saved = JSON.parse(raw);
     if (!Array.isArray(saved)) {
       return [];
     }
 
     const usedIds = new Set();
-    return saved
-      .map((entry) => normalizeHistoryEntry(entry, usedIds))
+    const normalized = saved
+      .map((entry, index) => normalizeHistoryEntry(entry, usedIds, index))
       .filter(Boolean)
       .slice(0, MAX_HISTORY);
+    persistRepairIfNeeded(HISTORY_KEY, raw, normalized, persistRepair);
+    return normalized;
   } catch {
     return [];
   }
 }
 
-function normalizeHistoryEntry(entry, usedIds) {
+function normalizeHistoryEntry(entry, usedIds, index) {
   if (!entry || typeof entry.closedAt !== 'string' || Number.isNaN(Date.parse(entry.closedAt))) {
     return null;
   }
@@ -1053,7 +1165,7 @@ function normalizeHistoryEntry(entry, usedIds) {
   const usedNames = new Set();
   const players = [];
   for (const [index, player] of entry.players.entries()) {
-    const name = String(player?.name ?? '').replace(/\s+/g, ' ').trim();
+    const name = normalizeName(player?.name);
     const nameKey = name.toLowerCase();
     const buyInCents = normalizeStoredMoney(player?.buyInCents);
     const cashOutCents = normalizeStoredMoney(player?.cashOutCents);
@@ -1066,13 +1178,7 @@ function normalizeHistoryEntry(entry, usedIds) {
       return null;
     }
 
-    let id = typeof player.id === 'string' && player.id
-      ? player.id
-      : `history-player-${index + 1}`;
-    if (usedPlayerIds.has(id)) {
-      id = `${id}-${index + 1}`;
-    }
-    usedPlayerIds.add(id);
+    const id = normalizeId(player?.id ?? `history-player-${index + 1}`, usedPlayerIds);
     usedNames.add(nameKey);
     players.push({ id, name, buyInCents, cashOutCents, paidCents, receivedCents });
   }
@@ -1082,9 +1188,11 @@ function normalizeHistoryEntry(entry, usedIds) {
     return null;
   }
 
-  let id = typeof entry.id === 'string' && entry.id ? entry.id : createId();
+  let id = typeof entry.id === 'string' && entry.id
+    ? entry.id
+    : `legacy-history-${index + 1}`;
   if (usedIds.has(id)) {
-    id = createId();
+    id = `${id}-${usedIds.size + 1}`;
   }
   usedIds.add(id);
   return {
@@ -1093,6 +1201,8 @@ function normalizeHistoryEntry(entry, usedIds) {
     players,
     totalBuyInCents: result.totalBuyInCents,
     totalCashOutCents: result.totalCashOutCents,
+    totalPaidCents: result.totalPaidCents,
+    totalReceivedCents: result.totalReceivedCents,
     tableCashCents: result.tableCashCents,
     balances: result.balances,
     transactions: result.transactions,
@@ -1104,6 +1214,17 @@ function normalizeStoredMoney(value) {
   return Number.isSafeInteger(value) && value >= 0 && value <= MAX_AMOUNT_CENTS
     ? value
     : null;
+}
+
+function persistRepairIfNeeded(key, raw, value, shouldPersist) {
+  if (!shouldPersist || raw === JSON.stringify(value)) {
+    return;
+  }
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // The in-memory migration still keeps the current page usable.
+  }
 }
 
 function withStorageLock(key, callback) {
@@ -1126,25 +1247,42 @@ function initializeStorageSync() {
     if (event.key === FRIENDS_KEY) {
       friends = loadFriends();
       renderFriends();
-      renderPlayers();
       return;
     }
     if (event.key === STORAGE_KEY) {
+      const activeInput = document.activeElement?.closest?.('[data-field]');
+      const activeCard = activeInput?.closest('.player-card');
+      const focusState = activeInput && activeCard
+        ? {
+            playerId: activeCard.dataset.playerId,
+            field: activeInput.dataset.field,
+            start: activeInput.selectionStart,
+            end: activeInput.selectionEnd,
+          }
+        : null;
       state = loadSession();
       currentResult = null;
       elements.resultsSection.hidden = true;
       renderPlayers();
       updateSessionSummary();
+      if (focusState) {
+        const replacement = findPlayerCard(focusState.playerId)
+          ?.querySelector(`[data-field="${focusState.field}"]`);
+        replacement?.focus();
+        replacement?.setSelectionRange(focusState.start, focusState.end);
+      }
       showToast('Draft updated from another tab.');
     }
   });
 }
 
-function saveHistory() {
+function saveHistory(value = history) {
   try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(value));
+    return true;
   } catch {
     showToast('This browser could not save game history.');
+    return false;
   }
 }
 
@@ -1172,7 +1310,8 @@ function resetSession() {
 
 function hasEnteredData() {
   return state.players.some(
-    (player) => player.name || player.buyIn || player.cashOut || player.paid || player.received,
+    (player) => player.name || player.cashBuyIn || player.creditBuyIn
+      || player.cashOut || player.extraPaid || player.received,
   );
 }
 

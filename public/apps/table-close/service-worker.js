@@ -1,5 +1,5 @@
 const CACHE_PREFIX = `table-close-${self.registration.scope}-`;
-const CACHE_NAME = `${CACHE_PREFIX}8d2902f04e81`;
+const CACHE_NAME = `${CACHE_PREFIX}7b88b7692d96`;
 const APP_SHELL = [
   './',
   './index.html',

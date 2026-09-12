@@ -71,6 +71,8 @@ export function summarizeSession(players) {
   let totalCashOutCents = 0;
   let totalPaidCents = 0;
   let totalReceivedCents = 0;
+  const playerIds = new Set();
+  const playerNames = new Set();
 
   const balances = players.map((player) => {
     const id = String(player.id ?? '');
@@ -83,6 +85,15 @@ export function summarizeSession(players) {
     if (!id || !name) {
       throw new TypeError('Each player needs an id and a name.');
     }
+    if (id === TABLE_CASH_ID || playerIds.has(id)) {
+      throw new TypeError('Each player needs a unique, non-reserved id.');
+    }
+    const normalizedName = name.toLowerCase();
+    if (playerNames.has(normalizedName)) {
+      throw new TypeError('Each player needs a unique name.');
+    }
+    playerIds.add(id);
+    playerNames.add(normalizedName);
     if (player.receivedCents > player.cashOutCents) {
       throw new RangeError('A player cannot receive more than their cash-out.');
     }
@@ -129,6 +140,9 @@ export function summarizeSession(players) {
  * @param {Array<{ id: string, name: string, buyInCents: number, cashOutCents: number, paidCents: number, receivedCents: number }>} players
  */
 export function settleSession(players) {
+  if (!Array.isArray(players) || players.length < 2) {
+    throw new RangeError('A session needs at least two players.');
+  }
   const summary = summarizeSession(players);
 
   if (summary.differenceCents !== 0) {
@@ -168,9 +182,9 @@ export function settleSession(players) {
 }
 
 /**
- * Create a valid direct debtor-to-creditor payment plan. For up to ten active
- * balances an exhaustive, pruned search finds the fewest transactions. Larger
- * games use a deterministic greedy plan to keep the phone UI responsive.
+ * Create a valid direct debtor-to-creditor payment plan. For up to eleven
+ * active balances (ten players plus table cash), an exhaustive, pruned search
+ * finds the fewest transactions. Larger games use a deterministic greedy plan.
  *
  * @param {Array<{ id: string, name: string, amountCents: number }>} balances
  */
@@ -179,10 +193,15 @@ export function createSettlementPlan(balances) {
     .filter((balance) => balance.amountCents !== 0)
     .map((balance) => ({ ...balance }));
 
+  const balanceIds = new Set();
   for (const balance of activeBalances) {
     if (!balance.id || !String(balance.name).trim() || !Number.isSafeInteger(balance.amountCents)) {
       throw new TypeError('Balances must have an id, name, and integer amount.');
     }
+    if (balanceIds.has(balance.id)) {
+      throw new TypeError('Balances must have unique ids.');
+    }
+    balanceIds.add(balance.id);
   }
 
   let total = 0;

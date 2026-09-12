@@ -59,7 +59,7 @@
             <div>
               <p class="section-number">01 / Players</p>
               <h2>Who was at the table?</h2>
-              <p>Cash-out can be left empty when a player lost their full buy-in.</p>
+              <p>Add each buy-in, then enter the final cash-out. That is all most games need.</p>
             </div>
             <div class="player-heading-actions">
               <span class="player-count" id="playerCount">2 players</span>
@@ -72,13 +72,13 @@
           <section class="friends-shelf" aria-labelledby="friendsTitle">
             <div class="friends-heading">
               <div>
-                <p class="friends-title" id="friendsTitle">Remembered friends</p>
-                <p>Tap a name to add them to this table.</p>
+                <p class="friends-title" id="friendsTitle">Past players</p>
+                <p>Tap a name to add them to this game.</p>
               </div>
               <span>Saved on this device</span>
             </div>
             <div class="friends-list" id="friendsList"></div>
-            <p class="friends-empty" id="friendsEmpty">Use Remember on a player card to save their name here.</p>
+            <p class="friends-empty" id="friendsEmpty">Players are remembered automatically when you settle a game.</p>
           </section>
 
           <div class="player-list" id="playerList" aria-live="polite"></div>
@@ -132,7 +132,7 @@
           </div>
         </form>
 
-        <section class="results" id="resultsSection" aria-labelledby="resultsTitle" hidden>
+        <section class="results" id="resultsSection" aria-labelledby="resultsTitle" tabindex="-1" hidden>
           <div class="results-heading">
             <div>
               <p class="section-number section-number-light">03 / Payment plan</p>
@@ -199,8 +199,7 @@
       <article class="player-card">
         <div class="player-card-topline">
           <span class="player-number">01</span>
-          <span class="player-net-label">Still to settle <output class="player-net">—</output></span>
-          <button class="remember-player" type="button" aria-pressed="false">Remember</button>
+          <span class="player-net-label">Balance <output class="player-net">—</output></span>
           <button class="remove-player" type="button" aria-label="Remove player">
             <span aria-hidden="true">Remove</span>
           </button>
@@ -211,27 +210,27 @@
             <span>Player name</span>
             <input data-field="name" type="text" maxlength="40" placeholder="e.g. Maya" autocomplete="off" />
           </label>
-          <label class="field">
-            <span>Buy-in</span>
-            <div class="money-input">
-              <span aria-hidden="true">₪</span>
-              <input data-field="buyIn" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
-            </div>
-          </label>
-          <label class="field">
-            <span>Cash-out</span>
+          <label class="field field-cashout">
+            <span>Final cash-out</span>
             <div class="money-input">
               <span aria-hidden="true">₪</span>
               <input data-field="cashOut" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
             </div>
           </label>
         </div>
+        <div class="buy-in-summary">
+          <div>
+            <span>Total buy-in</span>
+            <output class="buy-in-total">₪0.00</output>
+          </div>
+          <p><span>Cash <output class="cash-buy-in-total">₪0.00</output></span><span>Credit <output class="credit-buy-in-total">₪0.00</output></span></p>
+        </div>
         <div class="buy-in-presets" role="group" aria-label="Quick add to buy-in">
           <div class="preset-heading">
-            <span class="preset-label">Quick buy-in / rebuy</span>
-            <div class="buy-in-mode" role="group" aria-label="Buy-in payment type">
-              <button type="button" data-buy-in-mode="credit" aria-pressed="true">Credit</button>
-              <button type="button" data-buy-in-mode="cash" aria-pressed="false">Cash paid</button>
+            <span class="preset-label">Add buy-in as</span>
+            <div class="buy-in-mode" role="group" aria-label="How the next buy-in was paid">
+              <button type="button" data-buy-in-mode="cash" aria-pressed="true">Cash</button>
+              <button type="button" data-buy-in-mode="credit" aria-pressed="false">Credit</button>
             </div>
           </div>
           <div class="preset-buttons">
@@ -242,36 +241,57 @@
             <button class="buy-in-preset" type="button" data-buy-in-preset="40000">+400</button>
           </div>
         </div>
-        <div class="money-movement">
-          <div class="movement-heading">
-            <span>Money movement</span>
-            <small>Prevents charging someone twice</small>
+        <details class="player-options">
+          <summary>More options and corrections</summary>
+          <div class="option-group">
+            <div class="movement-heading">
+              <span>Edit buy-in totals</span>
+              <small>Use this only to correct a mistake</small>
+            </div>
+            <div class="movement-fields">
+              <label class="field">
+                <span>Cash buy-ins</span>
+                <div class="money-input">
+                  <span aria-hidden="true">₪</span>
+                  <input data-field="cashBuyIn" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+                </div>
+              </label>
+              <label class="field">
+                <span>Credit buy-ins</span>
+                <div class="money-input">
+                  <span aria-hidden="true">₪</span>
+                  <input data-field="creditBuyIn" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+                </div>
+              </label>
+            </div>
           </div>
-          <div class="movement-fields">
+          <div class="option-group">
+            <div class="movement-heading">
+              <span>Already settled in cash</span>
+              <small>Leave empty for the usual end-of-game close</small>
+            </div>
+            <div class="movement-fields">
             <label class="field">
-              <span>Paid to table</span>
+              <span>Extra cash paid</span>
               <div class="money-input">
                 <span aria-hidden="true">₪</span>
-                <input data-field="paid" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+                <input data-field="extraPaid" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
               </div>
             </label>
             <label class="field">
-              <span>Received from table</span>
+              <span>Cash already received</span>
               <div class="money-input">
                 <span aria-hidden="true">₪</span>
                 <input data-field="received" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
               </div>
             </label>
-          </div>
+            </div>
           <div class="movement-actions" role="group" aria-label="Cash-out money status">
-            <button type="button" data-received-action="left">Left payout on table</button>
-            <button type="button" data-received-action="all">Took full cash-out</button>
+              <button type="button" data-received-action="left">Nothing received yet</button>
+              <button type="button" data-received-action="all">Received full cash-out</button>
           </div>
-          <div class="accounting-strip">
-            <span>Buy-in credit <output class="credit-amount">₪0.00</output></span>
-            <span>Net cash left <output class="table-contribution">₪0.00</output></span>
           </div>
-        </div>
+        </details>
         <p class="player-error" role="alert" hidden></p>
       </article>
     </template>

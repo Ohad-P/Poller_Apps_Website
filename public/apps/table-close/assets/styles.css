@@ -126,6 +126,7 @@ a:focus-visible {
 }
 
 .brand {
+  min-height: 2.75rem;
   gap: 0.7rem;
   color: inherit;
   text-decoration: none;
@@ -190,7 +191,7 @@ a:focus-visible {
 }
 
 .button-quiet {
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   padding: 0.55rem 0.8rem;
   color: #fff;
   background: rgba(255, 255, 255, 0.09);
@@ -406,7 +407,7 @@ main {
 }
 
 .friend-chip button {
-  min-height: 2.45rem;
+  min-height: 2.75rem;
   padding: 0.5rem 0.72rem;
   color: var(--green);
   border: 0;
@@ -421,6 +422,7 @@ main {
 }
 
 .friend-chip .forget-friend {
+  min-width: 2.75rem;
   padding-right: 0.65rem;
   padding-left: 0.55rem;
   color: var(--muted);
@@ -501,7 +503,7 @@ main {
 }
 
 .remove-player {
-  min-height: 2rem;
+  min-height: 2.75rem;
   margin-left: 0.7rem;
   padding: 0 0 0 0.7rem;
   color: var(--muted);
@@ -514,29 +516,6 @@ main {
   text-transform: uppercase;
 }
 
-.remember-player {
-  min-height: 2rem;
-  margin-left: 0.65rem;
-  padding: 0.35rem 0.55rem;
-  color: var(--green);
-  border: 1px solid rgba(18, 60, 47, 0.25);
-  border-radius: 999px;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.63rem;
-  font-weight: 850;
-}
-
-.remember-player:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
-}
-
-.remember-player.is-remembered {
-  border-color: var(--acid);
-  background: var(--acid);
-}
-
 .player-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -544,6 +523,10 @@ main {
 }
 
 .field-name {
+  grid-column: 1 / -1;
+}
+
+.field-cashout {
   grid-column: 1 / -1;
 }
 
@@ -590,6 +573,51 @@ main {
   font-weight: 700;
 }
 
+.buy-in-summary {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding: 0.8rem;
+  border-radius: 0.65rem;
+  background: var(--green);
+}
+
+.buy-in-summary > div > span,
+.buy-in-summary p span {
+  display: block;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.buy-in-summary > div output {
+  display: block;
+  margin-top: 0.18rem;
+  color: var(--acid);
+  font-family: "Courier New", monospace;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.buy-in-summary p {
+  display: flex;
+  gap: 0.8rem;
+  margin: 0;
+  text-align: right;
+}
+
+.buy-in-summary p output {
+  display: block;
+  margin-top: 0.12rem;
+  color: #fff;
+  font-family: "Courier New", monospace;
+  font-size: 0.72rem;
+}
+
 .buy-in-presets {
   margin-top: 0.85rem;
   padding-top: 0.75rem;
@@ -623,7 +651,8 @@ main {
 }
 
 .buy-in-mode button {
-  min-height: 2rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   padding: 0.35rem 0.58rem;
   color: var(--muted);
   border: 0;
@@ -646,12 +675,32 @@ main {
   margin-top: 0.55rem;
 }
 
-.money-movement {
+.player-options {
   margin-top: 0.85rem;
-  padding: 0.85rem;
   border: 1px solid rgba(18, 60, 47, 0.14);
   border-radius: 0.65rem;
   background: rgba(18, 60, 47, 0.035);
+}
+
+.player-options > summary {
+  min-height: 2.8rem;
+  padding: 0.8rem;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.player-options[open] > summary {
+  border-bottom: 1px dashed var(--line);
+}
+
+.option-group {
+  padding: 0.85rem;
+}
+
+.option-group + .option-group {
+  border-top: 1px dashed var(--line);
 }
 
 .movement-heading > span {
@@ -682,7 +731,7 @@ main {
 }
 
 .movement-actions button {
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   padding: 0.5rem;
   color: var(--green);
   border: 1px solid rgba(18, 60, 47, 0.24);
@@ -695,6 +744,12 @@ main {
 
 .movement-actions button:hover {
   background: var(--acid);
+}
+
+.movement-actions button.is-selected {
+  color: var(--paper);
+  border-color: var(--green);
+  background: var(--green);
 }
 
 .accounting-strip {
@@ -727,7 +782,7 @@ main {
 
 .buy-in-preset {
   min-width: 0;
-  min-height: 2.7rem;
+  min-height: 2.75rem;
   padding: 0.45rem 0.15rem;
   color: var(--green);
   border: 1px solid rgba(18, 60, 47, 0.28);
@@ -1108,7 +1163,7 @@ main {
 }
 
 .history-actions button {
-  min-height: 2.5rem;
+  min-height: 2.75rem;
   padding: 0.5rem 0.7rem;
   color: var(--green);
   border: 1px solid rgba(18, 60, 47, 0.25);
@@ -1249,10 +1304,11 @@ footer p {
   }
 
   .player-fields {
-    grid-template-columns: minmax(12rem, 1.5fr) 1fr 1fr;
+    grid-template-columns: minmax(12rem, 1.5fr) 1fr;
   }
 
-  .field-name {
+  .field-name,
+  .field-cashout {
     grid-column: auto;
   }
 
@@ -1330,6 +1386,31 @@ footer p {
     justify-content: space-between;
     padding-right: 3rem;
     padding-left: 3rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .topbar-actions {
+    display: flex;
+    width: 100%;
+    gap: 0.35rem;
+  }
+
+  .topbar-actions .button {
+    flex: 1;
+    min-width: 0;
+    padding-right: 0.45rem;
+    padding-left: 0.45rem;
+    text-align: center;
+  }
+
+  .topbar-actions .button[hidden] {
+    display: none;
   }
 }
 
