@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Table Close maskable app icon</title>
+  <rect width="512" height="512" fill="#123c2f"/>
+  <circle cx="256" cy="256" r="172" fill="#f4f0e4"/>
+  <path d="M256 153 320 239 256 325 192 239Z" fill="#bd4b3f"/>
+  <path d="M184 359h144" fill="none" stroke="#123c2f" stroke-linecap="round" stroke-width="22"/>
+</svg>

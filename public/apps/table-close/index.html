@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#123c2f" />
+    <meta name="description" content="Close a poker table with a balanced, private payment plan." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Table Close" />
+    <title>Table Close | Poker Settler</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="./assets/styles.css" />
+    <script type="module" src="./assets/app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to the table</a>
+
+    <div class="app-shell">
+      <header class="masthead">
+        <nav class="topbar" aria-label="App controls">
+          <a class="brand" href="./" aria-label="Table Close home">
+            <span class="brand-mark" aria-hidden="true">TC</span>
+            <span>
+              <strong>Table Close</strong>
+              <small>Poker settler</small>
+            </span>
+          </a>
+
+          <div class="topbar-actions">
+            <button class="button button-quiet" id="installButton" type="button" hidden>
+              Install
+            </button>
+            <a class="button button-quiet" href="#historySection">History</a>
+            <button class="button button-quiet" id="newGameButton" type="button">
+              New game
+            </button>
+          </div>
+        </nav>
+
+        <div class="hero-copy">
+          <p class="eyebrow">The last hand is done</p>
+          <h1>Close the table.<br /><em>Keep the friendships.</em></h1>
+          <p>Enter what each player bought in for and cashed out. We will check the pot before anyone pays.</p>
+        </div>
+
+        <div class="privacy-note">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="connectionStatus">Private on this device</span>
+        </div>
+      </header>
+
+      <main id="main-content">
+        <form class="ledger" id="sessionForm" novalidate>
+          <div class="section-heading">
+            <div>
+              <p class="section-number">01 / Players</p>
+              <h2>Who was at the table?</h2>
+              <p>Cash-out can be left empty when a player lost their full buy-in.</p>
+            </div>
+            <div class="player-heading-actions">
+              <span class="player-count" id="playerCount">2 players</span>
+              <button class="button button-outline" id="addPlayerButton" type="button">
+                <span aria-hidden="true">+</span> Add player
+              </button>
+            </div>
+          </div>
+
+          <section class="friends-shelf" aria-labelledby="friendsTitle">
+            <div class="friends-heading">
+              <div>
+                <p class="friends-title" id="friendsTitle">Remembered friends</p>
+                <p>Tap a name to add them to this table.</p>
+              </div>
+              <span>Saved on this device</span>
+            </div>
+            <div class="friends-list" id="friendsList"></div>
+            <p class="friends-empty" id="friendsEmpty">Use Remember on a player card to save their name here.</p>
+          </section>
+
+          <div class="player-list" id="playerList" aria-live="polite"></div>
+
+          <button class="add-player-wide" id="addPlayerWideButton" type="button">
+            <span aria-hidden="true">+</span>
+            Add another player
+          </button>
+
+          <section class="pot-check" id="potCheck" aria-labelledby="potCheckTitle">
+            <div class="pot-check-header">
+              <div>
+                <p class="section-number">02 / Pot check</p>
+                <h2 id="potCheckTitle">Count it twice.</h2>
+              </div>
+              <span class="balance-stamp" id="balanceStamp">Not ready</span>
+            </div>
+
+            <dl class="totals-grid">
+              <div>
+                <dt>Total buy-ins</dt>
+                <dd id="buyInTotal">₪0.00</dd>
+              </div>
+              <div>
+                <dt>Total cash-outs</dt>
+                <dd id="cashOutTotal">₪0.00</dd>
+              </div>
+              <div class="difference-total">
+                <dt>Difference</dt>
+                <dd id="differenceTotal">₪0.00</dd>
+              </div>
+              <div class="table-cash-total">
+                <dt>Cash on table</dt>
+                <dd id="tableCashTotal">₪0.00</dd>
+              </div>
+            </dl>
+
+            <p class="pot-message" id="potMessage" role="status">
+              Add at least two completed players to check the pot.
+            </p>
+          </section>
+
+          <div class="settle-bar">
+            <div>
+              <strong>Ready to close?</strong>
+              <span id="settleHint">The pot must balance to ₪0.00.</span>
+            </div>
+            <button class="button button-primary" id="settleButton" type="submit" disabled>
+              Settle the table
+            </button>
+          </div>
+        </form>
+
+        <section class="results" id="resultsSection" aria-labelledby="resultsTitle" hidden>
+          <div class="results-heading">
+            <div>
+              <p class="section-number section-number-light">03 / Payment plan</p>
+              <h2 id="resultsTitle">Square the table.</h2>
+              <p id="resultsSummary"></p>
+            </div>
+            <span class="plan-badge" id="planBadge">Minimum payments</span>
+          </div>
+
+          <div class="payment-list" id="paymentList"></div>
+
+          <div class="result-actions">
+            <button class="button button-paper" id="copyButton" type="button">Copy plan</button>
+            <button class="button button-accent" id="shareButton" type="button">Share plan</button>
+          </div>
+        </section>
+
+        <section class="history-section" id="historySection" aria-labelledby="historyTitle">
+          <div class="section-heading history-heading">
+            <div>
+              <p class="section-number">04 / Game history</p>
+              <h2 id="historyTitle">Past table closes.</h2>
+              <p>Completed games are saved only on this device.</p>
+            </div>
+            <span class="history-count" id="historyCount">0 games</span>
+          </div>
+          <div class="history-list" id="historyList"></div>
+          <p class="history-empty" id="historyEmpty">Your completed games will appear here after the first settlement.</p>
+        </section>
+      </main>
+
+      <footer>
+        <p>Your game stays in this browser. No account, no server, no tracking.</p>
+        <span>Table Close v0.1</span>
+      </footer>
+    </div>
+
+    <dialog id="newGameDialog" class="app-dialog">
+      <form method="dialog">
+        <p class="section-number">Start over</p>
+        <h2>Clear this table?</h2>
+        <p>The current draft will be removed from this device.</p>
+        <div class="dialog-actions">
+          <button class="button button-outline" value="cancel">Keep editing</button>
+          <button class="button button-danger" id="confirmNewGameButton" value="confirm">Clear table</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="installDialog" class="app-dialog">
+      <form method="dialog">
+        <p class="section-number">Install on iPhone</p>
+        <h2>Keep it on your home screen.</h2>
+        <p>Open Safari's Share menu, then choose <strong>Add to Home Screen</strong>.</p>
+        <div class="dialog-actions">
+          <button class="button button-primary" value="close">Understood</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <template id="playerTemplate">
+      <article class="player-card">
+        <div class="player-card-topline">
+          <span class="player-number">01</span>
+          <span class="player-net-label">Still to settle <output class="player-net">—</output></span>
+          <button class="remember-player" type="button" aria-pressed="false">Remember</button>
+          <button class="remove-player" type="button" aria-label="Remove player">
+            <span aria-hidden="true">Remove</span>
+          </button>
+        </div>
+
+        <div class="player-fields">
+          <label class="field field-name">
+            <span>Player name</span>
+            <input data-field="name" type="text" maxlength="40" placeholder="e.g. Maya" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Buy-in</span>
+            <div class="money-input">
+              <span aria-hidden="true">₪</span>
+              <input data-field="buyIn" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+            </div>
+          </label>
+          <label class="field">
+            <span>Cash-out</span>
+            <div class="money-input">
+              <span aria-hidden="true">₪</span>
+              <input data-field="cashOut" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+            </div>
+          </label>
+        </div>
+        <div class="buy-in-presets" role="group" aria-label="Quick add to buy-in">
+          <div class="preset-heading">
+            <span class="preset-label">Quick buy-in / rebuy</span>
+            <div class="buy-in-mode" role="group" aria-label="Buy-in payment type">
+              <button type="button" data-buy-in-mode="credit" aria-pressed="true">Credit</button>
+              <button type="button" data-buy-in-mode="cash" aria-pressed="false">Cash paid</button>
+            </div>
+          </div>
+          <div class="preset-buttons">
+            <button class="buy-in-preset" type="button" data-buy-in-preset="5000">+50</button>
+            <button class="buy-in-preset" type="button" data-buy-in-preset="10000">+100</button>
+            <button class="buy-in-preset" type="button" data-buy-in-preset="20000">+200</button>
+            <button class="buy-in-preset" type="button" data-buy-in-preset="30000">+300</button>
+            <button class="buy-in-preset" type="button" data-buy-in-preset="40000">+400</button>
+          </div>
+        </div>
+        <div class="money-movement">
+          <div class="movement-heading">
+            <span>Money movement</span>
+            <small>Prevents charging someone twice</small>
+          </div>
+          <div class="movement-fields">
+            <label class="field">
+              <span>Paid to table</span>
+              <div class="money-input">
+                <span aria-hidden="true">₪</span>
+                <input data-field="paid" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+              </div>
+            </label>
+            <label class="field">
+              <span>Received from table</span>
+              <div class="money-input">
+                <span aria-hidden="true">₪</span>
+                <input data-field="received" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" />
+              </div>
+            </label>
+          </div>
+          <div class="movement-actions" role="group" aria-label="Cash-out money status">
+            <button type="button" data-received-action="left">Left payout on table</button>
+            <button type="button" data-received-action="all">Took full cash-out</button>
+          </div>
+          <div class="accounting-strip">
+            <span>Buy-in credit <output class="credit-amount">₪0.00</output></span>
+            <span>Net cash left <output class="table-contribution">₪0.00</output></span>
+          </div>
+        </div>
+        <p class="player-error" role="alert" hidden></p>
+      </article>
+    </template>
+  </body>
+</html>
