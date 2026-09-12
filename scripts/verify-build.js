@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outputRoot = path.join(projectRoot, 'dist');
+await access(path.join(projectRoot, 'wrangler.jsonc'));
 const expectedFiles = [
   'index.html',
   '404.html',

@@ -6,16 +6,16 @@ The registered production domain is `pollerapps.com`. It can remain parked until
 
 ## Recommended Hosting
 
-Use Cloudflare Pages for free static hosting and automatic HTTPS.
+Use Cloudflare Workers static assets for free hosting, Git-based deployments, and automatic HTTPS.
 
 Recommended sequence:
 
 1. Create a Git repository for `Poller_Labs_Website` and push it to GitHub.
-2. In Cloudflare Pages, create a project connected to that repository.
+2. In Cloudflare Workers, create a project connected to that repository.
 3. Set the build command to `npm run build`.
-4. Set the output directory to `dist`.
-5. Do not set a framework preset.
-6. Add `pollerapps.com` as a custom domain.
+4. Set the deploy command to `npx wrangler deploy`.
+5. Leave the root directory blank.
+6. Add `pollerapps.com` under the Worker's Domains & Routes settings.
 7. Redirect `www.pollerapps.com` to the root domain, or make the opposite choice consistently.
 
 ## Included Apps

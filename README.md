@@ -62,6 +62,8 @@ Open `http://localhost:5174`.
 | `npm run check` | Check JavaScript syntax, build, and verify the combined site. |
 | `npm run preview` | Serve the combined production output at `http://localhost:4174`. |
 
+Cloudflare Workers Builds uses `npm run build` followed by `npx wrangler deploy`. The checked-in `wrangler.jsonc` pins the Worker name, compatibility date, and `dist/` static-assets directory.
+
 The website has no package dependencies. `npm install` only creates or validates the lockfile. A normal website build uses the versioned app release already under `public/apps/`, so cloud builds do not require sibling projects.
 
 ## Documentation
