@@ -1,6 +1,6 @@
 const CACHE_PREFIX = `sogrim-${self.registration.scope}-`;
 const LEGACY_CACHE_PREFIX = 'table-close-';
-const CACHE_NAME = `${CACHE_PREFIX}7b39b25c3dea`;
+const CACHE_NAME = `${CACHE_PREFIX}8e7b7fe3d62a`;
 const APP_SHELL = [
   './',
   './index.html',

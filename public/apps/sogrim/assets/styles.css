@@ -1274,6 +1274,25 @@ footer p {
   margin: 0;
 }
 
+.support-line a {
+  color: rgba(255, 255, 255, 0.85);
+  text-underline-offset: 0.2rem;
+}
+
+.support-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.support-pills a {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 2rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 .app-dialog {
   width: min(calc(100% - 2rem), 28rem);
   padding: 0;
