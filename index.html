@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f3f0e8" />
-    <meta name="description" content="Poller Apps makes focused apps, playful experiments, and useful digital tools." />
+    <meta name="description" content="Poller Apps makes focused apps, playful experiments, and useful digital tools. Sogrim poker settler available now; Poker TD, a poker tower defense game where every hand becomes a tower, coming soon." />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Poller Apps | Small tools, carefully made" />
-    <meta property="og:description" content="Focused apps, playful experiments, and useful digital tools." />
+    <meta property="og:description" content="Focused apps, playful experiments, and useful digital tools. Sogrim available now; Poker TD poker tower defense coming soon." />
     <meta property="og:url" content="https://pollerapps.com/" />
     <meta property="og:image" content="https://pollerapps.com/social-card.png" />
     <meta property="og:image:width" content="1200" />
@@ -20,6 +20,33 @@
     <script src="./theme-init.js"></script>
     <link rel="stylesheet" href="./src/styles.css" />
     <script type="module" src="./src/site.js"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "Poller Apps",
+            "url": "https://pollerapps.com/",
+            "description": "Independent digital workshop for focused apps, playful experiments, and useful digital tools."
+          },
+          {
+            "@type": "VideoGame",
+            "name": "Poker TD",
+            "alternateName": ["Poker Tower Defense", "PokerTD"],
+            "description": "An upcoming fantasy poker tower defense game. Deal five cards, replace once — every poker hand becomes a tower that defends the route.",
+            "url": "https://pollerapps.com/poker-td/",
+            "genre": ["Tower Defense", "Card Game", "Strategy"],
+            "applicationCategory": "Game",
+            "author": {
+              "@type": "Organization",
+              "name": "Poller Apps",
+              "url": "https://pollerapps.com/"
+            }
+          }
+        ]
+      }
+    </script>
     <title>Poller Apps | Small tools, carefully made</title>
   </head>
   <body>
@@ -141,6 +168,75 @@
             </div>
             <span class="visual-note visual-note-top">Private by design</span>
             <span class="visual-note visual-note-bottom">Installable / Offline</span>
+          </div>
+        </article>
+
+        <article class="project-card project-card-poker reveal" id="poker-td">
+          <div class="project-copy poker-copy">
+            <div class="project-meta">
+              <span>Release 002</span>
+              <span>Fantasy Tower Defense</span>
+              <span class="release-status release-status-soon"><i aria-hidden="true"></i>Coming soon</span>
+            </div>
+            <h2>Poker TD</h2>
+            <p class="poker-tagline">Build your hand. Defend the route.</p>
+            <p>A fantasy tower defense where every poker hand becomes a tower. Deal five cards, replace once, and turn what you made &mdash; from One Pair to Royal Flush &mdash; into the defense that holds the lane.</p>
+
+            <ul class="feature-list" aria-label="Poker TD features">
+              <li>Deal five, keep or replace once</li>
+              <li>Each poker hand becomes a tower</li>
+              <li>Hold the lane, wave after wave</li>
+            </ul>
+
+            <p class="coming-soon-note"><i aria-hidden="true"></i> In development &mdash; first playable build on the way.</p>
+            <a class="text-link poker-more" href="./poker-td/">How it plays <span aria-hidden="true">→</span></a>
+          </div>
+
+          <div class="project-visual poker-visual" aria-label="Preview of Poker TD: a green battlefield with a winding dirt lane, towers, raiders, and a pair of fives becoming a tower">
+            <div class="poker-scene" aria-hidden="true">
+              <i class="poker-corner poker-corner-tl"></i>
+              <i class="poker-corner poker-corner-tr"></i>
+              <i class="poker-corner poker-corner-bl"></i>
+              <i class="poker-corner poker-corner-br"></i>
+              <div class="poker-title-plate">
+                <strong>POKER TD</strong>
+                <small>Build your hand. Defend the route.</small>
+              </div>
+              <svg class="poker-field" viewBox="0 0 280 150" role="presentation">
+                <rect x="264" y="0" width="16" height="150" fill="#4f8f9b" />
+                <rect x="267" y="0" width="4" height="150" fill="#8fd0da" opacity="0.7" />
+                <path d="M -12 58 H 172 V 106 H 72 V 162" fill="none" stroke="#7d6a45" stroke-width="22" stroke-linejoin="round" stroke-linecap="round" />
+                <path d="M -12 58 H 172 V 106 H 72 V 162" fill="none" stroke="#c9ab72" stroke-width="16" stroke-linejoin="round" stroke-linecap="round" />
+                <rect x="30" y="46" width="12" height="26" rx="1.5" fill="#9a9a92" stroke="#5c5c55" stroke-width="2" />
+                <rect x="140" y="94" width="26" height="12" rx="1.5" fill="#9a9a92" stroke="#5c5c55" stroke-width="2" />
+                <circle cx="112" cy="30" r="17" fill="none" stroke="rgba(251,244,229,.5)" stroke-width="1.4" stroke-dasharray="4 3" />
+                <circle cx="112" cy="30" r="8" fill="#6f6f68" stroke="#2c2c28" stroke-width="2" />
+                <circle cx="112" cy="24" r="4.5" fill="#7fd4e8" stroke="#eafcff" stroke-width="1.4" />
+                <circle cx="212" cy="80" r="8" fill="#6f6f68" stroke="#2c2c28" stroke-width="2" />
+                <circle cx="212" cy="74" r="4.5" fill="#f3c969" stroke="#fff3cf" stroke-width="1.4" />
+                <circle cx="112" cy="128" r="8" fill="#6f6f68" stroke="#2c2c28" stroke-width="2" />
+                <circle cx="112" cy="122" r="4.5" fill="#b94332" stroke="#ffd9d2" stroke-width="1.4" />
+                <line x1="112" y1="28" x2="138" y2="56" stroke="#9be9f7" stroke-width="2.4" stroke-linecap="round" />
+                <circle cx="52" cy="58" r="4.4" fill="#b94332" stroke="#fbf4e5" stroke-width="1.5" />
+                <circle cx="68" cy="58" r="4.4" fill="#b94332" stroke="#fbf4e5" stroke-width="1.5" />
+                <circle cx="172" cy="72" r="4.4" fill="#b94332" stroke="#fbf4e5" stroke-width="1.5" />
+                <circle cx="72" cy="122" r="5" fill="#202720" stroke="#f3c969" stroke-width="1.8" />
+              </svg>
+              <div class="poker-hud">
+                <div class="poker-hud-cards">
+                  <span>5<b>♠</b></span>
+                  <span class="poker-red">K<b>♥</b></span>
+                  <span class="poker-red">5<b>♥</b></span>
+                  <span class="poker-red">7<b>♥</b></span>
+                  <span>J<b>♠</b></span>
+                </div>
+                <div class="poker-hud-info">
+                  <b>ONE PAIR</b>
+                  <small>Pair of 5s · Tower Lv.1</small>
+                </div>
+              </div>
+              <span class="poker-seal"><b>★</b>Coming<br />soon</span>
+            </div>
           </div>
         </article>
       </section>
